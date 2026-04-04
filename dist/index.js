@@ -290,6 +290,7 @@ function useDeepCompareMemo(factory, deps) {
 function usePivotTable(options) {
   const [pluginVersion, setPluginVersion] = useState(0);
   const [dataVersion, setDataVersion] = useState(0);
+  const [stateVersion, setStateVersion] = useState(0);
   const prevDataRef = useRef(void 0);
   const stableDataRef = useRef(options.data ?? []);
   const columnsRef = useRef([]);
@@ -336,6 +337,7 @@ function usePivotTable(options) {
       storeRef.current.getState().setState(next);
       options.onStateChange?.(next, previous);
       pluginCacheRef.current.clear();
+      setStateVersion((v) => v + 1);
     },
     [options.state, options.onStateChange]
   );
@@ -459,7 +461,7 @@ function usePivotTable(options) {
       flatRows: transformedRows,
       rowsById
     };
-  }, [coreRowModel.rows, pluginVersion, dataVersion]);
+  }, [coreRowModel.rows, pluginVersion, dataVersion, stateVersion]);
   return {
     state,
     setState: stableSetState,

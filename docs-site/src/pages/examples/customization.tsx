@@ -1,13 +1,34 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { usePivotTable } from '@pivot/core/usePivotTable';
+import { createSortingPlugin, withSorting, type SortingTableState } from '@pivot/plugins/sorting';
 import { CodePreview } from '@/components/CodePreview';
 import { generateData } from '@/examples/mockData';
-import { Settings, User, CreditCard } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 const exampleCode = `
-import { usePivotTable } from 'react-pivot-pro/core';
-// ... full implementation with custom cell rendering and styling
+import { usePivotTable } from 'react-pivot-pro';
+import { createSortingPlugin, withSorting } from 'react-pivot-pro';
+
+const columns = [
+  {
+    id: 'customer',
+    header: 'Customer',
+    accessorKey: 'company',
+    cell: (val) => (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <Avatar name={val} />
+        <div>{val}</div>
+      </div>
+    ),
+  },
+  // ... more custom cells
+];
+
+const table = usePivotTable({ data, columns });
 `;
+
+type LocalState = SortingTableState;
+type CustomTable = ReturnType<typeof withSorting<any, LocalState>>;
 
 export default function Customization() {
   const [data] = useState(() => generateData(20));
@@ -17,57 +38,27 @@ export default function Customization() {
       id: 'customer', 
       header: 'Customer', 
       accessorKey: 'company',
-      cell: (val: string) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'color-mix(in oklab, var(--primary) 20%, transparent)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-            {val.charAt(0)}
-          </div>
-          <div>
-            <div style={{ fontWeight: 500 }}>{val}</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ID: {Math.floor(Math.random() * 10000)}</div>
-          </div>
-        </div>
-      )
+      enableSorting: true,
     },
-    { 
-      id: 'account', 
-      header: 'Account Details', 
-      accessorKey: 'account',
-      cell: (val: string) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)' }}>
-          <CreditCard size={14} />
-          <span>•••• {val.slice(-4)}</span>
-        </div>
-      )
-    },
-    { id: 'status', header: 'Status', accessorKey: 'status',
-      cell: (val: string) => (
-        <span style={{ 
-          padding: '4px 8px', 
-          borderRadius: 4, 
-          fontSize: '0.85rem', 
-          fontWeight: 500,
-          background: val === 'Completed' ? 'color-mix(in oklab, var(--success) 20%, transparent)' : 'color-mix(in oklab, var(--warning) 20%, transparent)',
-          color: val === 'Completed' ? 'var(--success)' : 'var(--warning)',
-        }}>
-          {val}
-        </span>
-      )
-    },
+    { id: 'account', header: 'Account Details', accessorKey: 'account' },
+    { id: 'status', header: 'Status', accessorKey: 'status' },
+    { id: 'amount', header: 'Amount', accessorKey: 'amount', enableSorting: true },
     {
       id: 'actions',
       header: '',
       accessorKey: 'id',
-      cell: () => (
-        <button className="ghost-btn icon-btn"><Settings size={16} /></button>
-      )
-    }
+    },
   ], []);
 
-  const table = usePivotTable({
+  const baseTable = usePivotTable<any, LocalState>({
     data,
     columns,
+    plugins: [createSortingPlugin()],
   });
+
+  const table = useMemo((): CustomTable => {
+    return withSorting<any, LocalState>(baseTable) as CustomTable;
+  }, [baseTable]);
 
   return (
     <div className="doc-page">
@@ -82,21 +73,102 @@ export default function Customization() {
             <table className="demo-table">
               <thead>
                 <tr>
-                  {table.columns.map((column: any) => (
-                    <th key={column.id}>
+                  {table.columns.map((column) => (
+                    <th 
+                      key={column.id}
+                      onClick={() => column.id !== 'actions' && table.sorting.toggleSorting(column.id)}
+                      style={{ cursor: column.id !== 'actions' ? 'pointer' : 'default' }}
+                    >
                       {column.header ?? column.id}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {table.getRowModel().rows.slice(0, 5).map((row: any) => (
+                {table.getRowModel().rows.slice(0, 5).map((row) => (
                   <tr key={row.id}>
-                    {table.columns.map((column: any) => (
-                      <td key={column.id} style={{ padding: '16px 14px' }}>
-                        {column.cell ? column.cell(row.getValue(column.id), row) : String(row.getValue(column.id) ?? '')}
-                      </td>
-                    ))}
+                    {table.columns.map((column) => {
+                      const value = row.getValue(column.id);
+                      
+                      if (column.id === 'customer') {
+                        return (
+                          <td key={column.id} style={{ padding: '16px 14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                              <div style={{ 
+                                width: 32, 
+                                height: 32, 
+                                borderRadius: '50%', 
+                                background: 'color-mix(in oklab, var(--primary) 20%, transparent)', 
+                                color: 'var(--primary)', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                fontWeight: 'bold',
+                                fontSize: '0.85rem'
+                              }}>
+                                {String(value).charAt(0)}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: 500 }}>{String(value)}</div>
+                              </div>
+                            </div>
+                          </td>
+                        );
+                      }
+                      
+                      if (column.id === 'account') {
+                        return (
+                          <td key={column.id} style={{ padding: '16px 14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-muted)' }}>
+                              <span>•••• {String(value).slice(-4)}</span>
+                            </div>
+                          </td>
+                        );
+                      }
+                      
+                      if (column.id === 'status') {
+                        const isCompleted = String(value) === 'Completed';
+                        return (
+                          <td key={column.id} style={{ padding: '16px 14px' }}>
+                            <span style={{ 
+                              padding: '4px 8px', 
+                              borderRadius: 4, 
+                              fontSize: '0.85rem', 
+                              fontWeight: 500,
+                              background: isCompleted ? 'color-mix(in oklab, var(--success) 20%, transparent)' : 'color-mix(in oklab, var(--warning) 20%, transparent)',
+                              color: isCompleted ? 'var(--success)' : 'var(--warning)',
+                            }}>
+                              {String(value)}
+                            </span>
+                          </td>
+                        );
+                      }
+                      
+                      if (column.id === 'amount') {
+                        const amount = value as number;
+                        return (
+                          <td key={column.id} style={{ padding: '16px 14px', fontWeight: 600 }}>
+                            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount ?? 0)}
+                          </td>
+                        );
+                      }
+                      
+                      if (column.id === 'actions') {
+                        return (
+                          <td key={column.id} style={{ padding: '16px 14px' }}>
+                            <button className="ghost-btn icon-btn">
+                              <Settings size={16} />
+                            </button>
+                          </td>
+                        );
+                      }
+                      
+                      return (
+                        <td key={column.id} style={{ padding: '16px 14px' }}>
+                          {String(value ?? '')}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>

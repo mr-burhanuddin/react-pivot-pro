@@ -5,16 +5,43 @@ import { generateData, FinancialTransaction } from '@/examples/mockData';
 import { Server, RefreshCw } from 'lucide-react';
 
 const exampleCode = `
-import { usePivotTable } from 'react-pivot-pro/core';
-import { usePagination } from 'react-pivot-pro/plugins';
-// ... full implementation with server-side operations
+import { useState, useEffect } from 'react';
+import { usePivotTable } from 'react-pivot-pro';
+
+function ServerSideTable() {
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate server fetch
+    fetchData().then(result => {
+      setData(result);
+      setIsLoading(false);
+    });
+  }, []);
+
+  const table = usePivotTable({ data, columns });
+
+  if (isLoading) return <div>Loading...</div>;
+  
+  return (
+    <table>
+      {table.getRowModel().rows.map(row => (
+        <tr key={row.id}>
+          {columns.map(col => (
+            <td key={col.id}>{row.getValue(col.id)}</td>
+          ))}
+        </tr>
+      ))}
+    </table>
+  );
+}
 `;
 
 export default function ServerSide() {
   const [data, setData] = useState<FinancialTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate server fetch
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
@@ -25,28 +52,26 @@ export default function ServerSide() {
   }, []);
 
   const columns = useMemo(() => [
-    { id: 'id', header: 'ID', accessorKey: 'id', width: 100 },
-    { id: 'date', header: 'Date', accessorKey: 'date', width: 140 },
-    { id: 'company', header: 'Company', accessorKey: 'company', width: 160 },
-    { id: 'account', header: 'Account', accessorKey: 'account', width: 140 },
-    { 
-      id: 'amount', 
-      header: 'Amount', 
-      accessorKey: 'amount', 
-      width: 120,
-      cell: (val: number) => (
-        <span style={{ color: val < 0 ? 'var(--danger)' : 'inherit' }}>
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val)}
-        </span>
-      )
-    },
-    { id: 'status', header: 'Status', accessorKey: 'status', width: 120 },
+    { id: 'id', header: 'ID', accessorKey: 'id' },
+    { id: 'date', header: 'Date', accessorKey: 'date' },
+    { id: 'company', header: 'Company', accessorKey: 'company' },
+    { id: 'account', header: 'Account', accessorKey: 'account' },
+    { id: 'amount', header: 'Amount', accessorKey: 'amount' },
+    { id: 'status', header: 'Status', accessorKey: 'status' },
   ], []);
 
   const table = usePivotTable({
     data,
     columns,
   });
+
+  const handleRefresh = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setData(generateData(25));
+      setIsLoading(false);
+    }, 1000);
+  };
 
   return (
     <div className="doc-page">
@@ -64,10 +89,9 @@ export default function ServerSide() {
               </div>
             </div>
             <div className="toolbar-group">
-              <button className="ghost-btn icon-btn" onClick={() => {
-                setIsLoading(true);
-                setTimeout(() => { setData(generateData(25)); setIsLoading(false); }, 1000);
-              }}><RefreshCw size={14} /> Refresh</button>
+              <button className="ghost-btn icon-btn" onClick={handleRefresh}>
+                <RefreshCw size={14} className={isLoading ? 'spin' : ''} /> Refresh
+              </button>
             </div>
           </div>
           <div className="table-shell" style={{ position: 'relative', height: 400, overflow: 'auto', border: 'none', borderRadius: 0 }}>
@@ -79,17 +103,19 @@ export default function ServerSide() {
             <table className="demo-table">
               <thead>
                 <tr>
-                  {table.columns.map((column: any) => (
-                    <th key={column.id} style={{ width: column.width }}>{column.header ?? column.id}</th>
+                  {table.columns.map((column) => (
+                    <th key={column.id}>{column.header ?? column.id}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {table.getRowModel().rows.map((row: any) => (
+                {table.getRowModel().rows.map((row) => (
                   <tr key={row.id}>
-                    {table.columns.map((column: any) => (
+                    {table.columns.map((column) => (
                       <td key={column.id}>
-                        {column.cell ? column.cell(row.getValue(column.id), row) : String(row.getValue(column.id) ?? '')}
+                        {column.id === 'amount'
+                          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.getValue<number>(column.id) ?? 0)
+                          : String(row.getValue(column.id) ?? '')}
                       </td>
                     ))}
                   </tr>

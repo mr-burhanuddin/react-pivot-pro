@@ -9,6 +9,8 @@
   --accent-soft: #dcf2ee;
   --code-bg: #f0f3f7;
   --danger: #a03f3f;
+  --success: #166534;
+  --warning: #854d0e;
 }
 
 :root[data-theme='dark'] {

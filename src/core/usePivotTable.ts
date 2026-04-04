@@ -197,6 +197,7 @@ export function usePivotTable<
 >(options: PivotTableOptions<TData, TState>): PivotTableInstance<TData, TState> {
   const [pluginVersion, setPluginVersion] = useState(0);
   const [dataVersion, setDataVersion] = useState(0);
+  const [stateVersion, setStateVersion] = useState(0);
   
   const prevDataRef = useRef<TData[] | undefined>(undefined);
   const stableDataRef = useRef<TData[]>(options.data ?? []);
@@ -259,6 +260,7 @@ export function usePivotTable<
       options.onStateChange?.(next, previous);
       
       pluginCacheRef.current.clear();
+      setStateVersion(v => v + 1);
     },
     [options.state, options.onStateChange],
   );
@@ -412,7 +414,7 @@ export function usePivotTable<
       flatRows: transformedRows,
       rowsById,
     };
-  }, [coreRowModel.rows, pluginVersion, dataVersion]);
+  }, [coreRowModel.rows, pluginVersion, dataVersion, stateVersion]);
 
   return {
     state,

@@ -1,75 +1,102 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react';
 import { usePivotTable } from '@pivot/core/usePivotTable';
-import { useSorting } from '@pivot/plugins/sorting';
-import { useFiltering } from '@pivot/plugins/filtering';
+import { createSortingPlugin, withSorting, type SortingTableState } from '@pivot/plugins/sorting';
+import { createFilteringPlugin, withFiltering, type FilteringTableState, type FilteringApi } from '@pivot/plugins/filtering';
 import { useVirtualRows } from '@pivot/hooks/useVirtualRows';
 import { CodePreview } from '@/components/CodePreview';
 import { generateData } from '@/examples/mockData';
-import { Download, Filter, Search, Columns } from 'lucide-react';
+import { Download, Search } from 'lucide-react';
 
 const exampleCode = `
-import { usePivotTable } from 'react-pivot-pro/core';
-import { useSorting, useFiltering, useVirtualRows } from 'react-pivot-pro/plugins';
-// ... full implementation with toolbar and grid
+import { usePivotTable } from 'react-pivot-pro';
+import { createSortingPlugin, createFilteringPlugin, withSorting, withFiltering } from 'react-pivot-pro';
+import { exportCSV } from 'react-pivot-pro';
+
+const table = usePivotTable({
+  data,
+  columns,
+  plugins: [createSortingPlugin(), createFilteringPlugin()],
+});
+
+const tableWithFeatures = withSorting(withFiltering(table));
+exportCSV({ rows: table.getRowModel().rows });
 `;
+
+type LocalState = SortingTableState & FilteringTableState;
+type FeatureTable = ReturnType<typeof withSorting<any, LocalState>> & ReturnType<typeof withFiltering<any, LocalState>>;
 
 export default function EnterpriseGrid() {
   const [data] = useState(() => generateData(1000));
   const [globalFilter, setGlobalFilter] = useState('');
 
+  const filteringApiRef = useRef<FilteringApi<any, LocalState> | null>(null);
+
   const columns = useMemo(() => [
-    { id: 'id', header: 'Transaction ID', accessorKey: 'id', width: 140 },
-    { id: 'date', header: 'Date', accessorKey: 'date', width: 120 },
-    { id: 'company', header: 'Company', accessorKey: 'company', width: 160 },
-    { id: 'account', header: 'Account', accessorKey: 'account', width: 140 },
+    { id: 'id', header: 'Transaction ID', accessorKey: 'id', enableSorting: true },
+    { id: 'date', header: 'Date', accessorKey: 'date', enableSorting: true },
+    { id: 'company', header: 'Company', accessorKey: 'company', enableSorting: true },
+    { id: 'account', header: 'Account', accessorKey: 'account', enableSorting: true },
     { 
       id: 'amount', 
       header: 'Amount', 
       accessorKey: 'amount', 
-      width: 120,
-      cell: (val: number) => (
-        <span style={{ color: val < 0 ? 'var(--danger)' : 'inherit', fontWeight: 500 }}>
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val)}
-        </span>
-      )
+      enableSorting: true,
     },
-    { 
-      id: 'status', 
-      header: 'Status', 
-      accessorKey: 'status', 
-      width: 120,
-      cell: (val: string) => (
-        <span className={`status-badge ${val === 'Completed' ? 'success' : val === 'Pending' ? 'warning' : 'danger'}`}>
-          {val}
-        </span>
-      )
-    },
+    { id: 'status', header: 'Status', accessorKey: 'status', enableSorting: true },
   ], []);
 
-  const sorting = useSorting();
-  const filtering = useFiltering();
-
-  const table = usePivotTable({
+  const baseTable = usePivotTable<any, LocalState>({
     data,
     columns,
-    plugins: [sorting, filtering],
-    state: {
-      globalFilter
-    } as any  });
+    plugins: [createSortingPlugin(), createFilteringPlugin()],
+  });
+
+  const table = useMemo((): FeatureTable => {
+    const withFilteringTable = withFiltering<any, LocalState>(baseTable);
+    const withSortingTable = withSorting<any, LocalState>(withFilteringTable);
+    if (!filteringApiRef.current) {
+      filteringApiRef.current = withFilteringTable.filtering;
+    }
+    return withSortingTable as FeatureTable;
+  }, [baseTable]);
+
+  useEffect(() => {
+    if (filteringApiRef.current) {
+      const currentFilter = filteringApiRef.current.getGlobalFilter();
+      if (currentFilter !== globalFilter) {
+        filteringApiRef.current.setGlobalFilter(globalFilter);
+      }
+    }
+  }, [globalFilter]);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const getScrollElement = useCallback(() => containerRef.current, []);
+  const estimateSize = useCallback(() => 44, []);
 
-  useVirtualRows({
+  const { virtualRows, totalSize } = useVirtualRows({
     count: table.getRowModel().rows.length,
-    getScrollElement: () => containerRef.current,
-    estimateSize: () => 44,
+    getScrollElement,
+    estimateSize,
   });
+
+  const handleExport = () => {
+    const rows = table.getRowModel().rows.slice(0, 100).map(row => {
+      const obj: Record<string, unknown> = {};
+      table.columns.forEach(col => {
+        obj[col.header ?? col.id] = row.getValue(col.id);
+      });
+      return obj;
+    });
+    import('@pivot/utils/index').then(({ exportCSV }) => {
+      exportCSV({ rows });
+    });
+  };
 
   return (
     <div className="doc-page">
       <header>
         <h1 className="page-title">Enterprise Data Grid</h1>
-        <p className="page-desc">A full-featured data grid demonstrating sorting, filtering, rendering optimizations, and a custom toolbar.</p>
+        <p className="page-desc">A full-featured data grid demonstrating sorting, filtering, virtualization, and CSV export.</p>
       </header>
 
       <CodePreview title="Enterprise Data Grid Demo" code={exampleCode}>
@@ -89,34 +116,47 @@ export default function EnterpriseGrid() {
               </div>
             </div>
             <div className="toolbar-group">
-              <button className="ghost-btn icon-btn"><Filter size={16} /> Filters</button>
-              <button className="ghost-btn icon-btn"><Columns size={16} /> Columns</button>
-              <button className="btn-primary"><Download size={16} /> Export</button>
+              <button 
+                className="ghost-btn icon-btn"
+                onClick={() => {
+                  setGlobalFilter('');
+                  table.filtering.resetGlobalFilter();
+                }}
+              >
+                Reset
+              </button>
+              <button className="btn-primary" onClick={handleExport}>
+                <Download size={16} /> Export
+              </button>
             </div>
           </div>
           <div ref={containerRef} className="table-shell" style={{ height: 400, overflow: 'auto', border: 'none', borderRadius: 0 }}>
             <table className="demo-table">
               <thead>
                 <tr>
-                  {table.columns.map((column: any) => (
+                  {table.columns.map((column) => (
                     <th 
                       key={column.id} 
-                      style={{ width: column.width }}
-                      onClick={() => table.setState?.((p: any) => ({ ...p, sorting: [{ id: column.id, desc: false }] }))}
+                      onClick={() => table.sorting.toggleSorting(column.id)}
+                      style={{ cursor: 'pointer' }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {column.header ?? column.id}
+                        {table.sorting.getIsSorted(column.id) === 'asc' && ' ↑'}
+                        {table.sorting.getIsSorted(column.id) === 'desc' && ' ↓'}
                       </div>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {table.getRowModel().rows.slice(0, 100).map((row: any) => (
+                {table.getRowModel().rows.slice(0, 100).map((row) => (
                   <tr key={row.id}>
-                    {table.columns.map((column: any) => (
+                    {table.columns.map((column) => (
                       <td key={column.id}>
-                        {column.cell ? column.cell(row.getValue(column.id), row) : String(row.getValue(column.id) ?? '')}
+                        {column.id === 'amount'
+                          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.getValue<number>(column.id) ?? 0)
+                          : String(row.getValue(column.id) ?? '')}
                       </td>
                     ))}
                   </tr>

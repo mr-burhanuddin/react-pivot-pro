@@ -1,16 +1,31 @@
 import { useMemo, useState } from 'react';
 import { usePivotTable } from '@pivot/core/usePivotTable';
-import { useGrouping } from '@pivot/plugins/grouping';
-import { usePivot } from '@pivot/plugins/pivot';
+import { createGroupingPlugin, withGrouping, type GroupingTableState } from '@pivot/plugins/grouping';
+import { createPivotPlugin, withPivot, type PivotTableState } from '@pivot/plugins/pivot';
 import { CodePreview } from '@/components/CodePreview';
 import { generateData } from '@/examples/mockData';
-import { Layers, Activity } from 'lucide-react';
+import { Layers } from 'lucide-react';
 
 const exampleCode = `
-import { usePivotTable } from 'react-pivot-pro/core';
-import { useGrouping, usePivot } from 'react-pivot-pro/plugins';
-// ... full implementation with multi-level grouping and aggregation
+import { usePivotTable } from 'react-pivot-pro';
+import { createGroupingPlugin, createPivotPlugin, withGrouping, withPivot } from 'react-pivot-pro';
+
+const table = usePivotTable({
+  data,
+  columns,
+  plugins: [createGroupingPlugin(), createPivotPlugin()],
+  initialState: {
+    rowGrouping: ['region'],
+    columnGrouping: ['quarter'],
+    pivotEnabled: true,
+  },
+});
+
+const pivotTable = withPivot(withGrouping(table));
+const result = pivotTable.pivot.getPivotResult();
 `;
+
+type LocalState = GroupingTableState & PivotTableState;
 
 export default function PivotAnalytics() {
   const [data] = useState(() => generateData(2000));
@@ -19,36 +34,39 @@ export default function PivotAnalytics() {
     { id: 'region', header: 'Region', accessorKey: 'region' },
     { id: 'country', header: 'Country', accessorKey: 'country' },
     { id: 'department', header: 'Department', accessorKey: 'department' },
-    { 
-      id: 'amount', 
-      header: 'Revenue', 
-      accessorKey: 'amount', 
-      pivot: { aggregator: 'sum' },
-      cell: (val: number) => (
-        <span style={{ fontWeight: 600 }}>
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val)}
-        </span>
-      )
-    },
-    {
-      id: 'transactions',
-      header: 'Transactions',
-      accessorFn: () => 1,
-      pivot: { aggregator: 'sum' }
-    }
+    { id: 'amount', header: 'Revenue', accessorKey: 'amount' },
+    { id: 'transactions', header: 'Transactions', accessorFn: () => 1 },
   ], []);
 
-  const grouping = useGrouping();
-  const pivot = usePivot();
-
-  const table = usePivotTable({
+  const baseTable = usePivotTable<any, LocalState>({
     data,
-    columns: columns as any,
-    plugins: [grouping, pivot] as any,
-    state: {
-      grouping: ['region', 'country']
-    } as any
+    columns,
+    plugins: [createGroupingPlugin(), createPivotPlugin({
+      defaultValues: [
+        { id: 'amount', aggregation: 'sum' },
+        { id: 'transactions', aggregation: 'sum' },
+      ],
+    })],
+    initialState: {
+      rowGrouping: ['region', 'country'],
+      pivotEnabled: true,
+      pivotValues: [
+        { id: 'amount', aggregation: 'sum' },
+        { id: 'transactions', aggregation: 'sum' },
+      ],
+    } as any,
   });
+
+  const table = useMemo(
+    () => withPivot<any, LocalState>(withGrouping<any, LocalState>(baseTable)),
+    [baseTable],
+  );
+
+  const result = table.pivot.getPivotResult();
+
+  if (!result) {
+    return <p className="meta-row">Pivot is disabled.</p>;
+  }
 
   return (
     <div className="doc-page">
@@ -66,31 +84,39 @@ export default function PivotAnalytics() {
                 <span>Grouped by: <strong>Region → Country</strong></span>
               </div>
             </div>
-            <div className="toolbar-group">
-              <button className="ghost-btn icon-btn"><Activity size={16} /> View Insights</button>
-            </div>
           </div>
           <div className="table-shell" style={{ height: 400, overflow: 'auto', border: 'none', borderRadius: 0 }}>
             <table className="demo-table">
               <thead>
                 <tr>
-                  {table.columns.map((column: any) => (
-                    <th key={column.id}>{column.header ?? column.id}</th>
+                  <th>Row Group</th>
+                  {result.columnHeaders.map((column) => (
+                    <th key={column.key}>{column.path.join(' / ') || 'Total'}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {table.getRowModel().rows.slice(0, 100).map((row: any) => (
-                  <tr key={row.id} className={row.grouping ? 'group-row' : ''} style={{
-                    background: row.depth === 0 ? 'var(--surface-muted)' : row.depth === 1 ? 'color-mix(in oklab, var(--surface-muted) 50%, transparent)' : 'inherit'
-                  }}>
-                    {table.columns.map((column: any) => (
-                      <td key={column.id} style={{ paddingLeft: column.id === (table.state as any).grouping?.[0] ? Number(row.depth) * 20 + 14 : 14 }}>
-                        {column.cell ? column.cell(row.getValue(column.id), row) : String(row.getValue(column.id) ?? '')}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {result.rowHeaders.map((path) => {
+                  const rowKey = path.length === 0 ? '__root__' : path.join('||');
+                  return (
+                    <tr key={rowKey}>
+                      <td>{path.join(' / ') || 'All Regions'}</td>
+                      {result.columnHeaders.map((column) => {
+                        const valueMap = result.matrixByRowKey[rowKey]?.[column.key] ?? {};
+                        return (
+                          <td key={`${rowKey}_${column.key}`}>
+                            <div style={{ fontWeight: 600 }}>
+                              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format((valueMap.amount as number) ?? 0)}
+                            </div>
+                            <div className="meta-row">
+                              Tx: {Number(valueMap.transactions ?? 0).toFixed(0)}
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
