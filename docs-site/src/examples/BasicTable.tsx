@@ -89,7 +89,7 @@ export default function BasicTable() {
       });
       return obj;
     });
-    exportCSV({ rows: exportRows, fileName: 'sales-export' });
+    exportCSV({ rows: exportRows, fileName: 'sales-export' }).download();
   }, [rows, visibleColumns]);
 
   return (

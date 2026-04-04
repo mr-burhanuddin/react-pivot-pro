@@ -231,7 +231,7 @@ export default function EnterpriseTable() {
       });
       return obj;
     });
-    exportCSV({ rows: exportRows, fileName: 'enterprise-export' });
+    exportCSV({ rows: exportRows, fileName: 'enterprise-export' }).download();
   }, [rows, visibleColumns]);
 
   const toggleGroup = useCallback((groupId: string) => {

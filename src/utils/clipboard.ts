@@ -68,29 +68,15 @@ export async function copyToClipboard(options: CopyToClipboardOptions): Promise<
   return fallbackToExecCommand ? fallbackCopyText(text) : false;
 }
 
-type FullscreenDoc = Document & {
-  webkitFullscreenElement?: Element | null;
-  mozFullScreenElement?: Element | null;
-  msFullscreenElement?: Element | null;
-  webkitExitFullscreen?: () => Promise<void> | void;
-  mozCancelFullScreen?: () => Promise<void> | void;
-  msExitFullscreen?: () => Promise<void> | void;
-};
-
-type FullscreenEl = Element & {
-  webkitRequestFullscreen?: () => Promise<void> | void;
-  mozRequestFullScreen?: () => Promise<void> | void;
-  msRequestFullscreen?: () => Promise<void> | void;
-};
-
 function getFullscreenElement(): Element | null {
   if (!isBrowserEnvironment()) {
     return null;
   }
 
-  const doc = document as FullscreenDoc;
+  const doc = document as any;
+  
   return (
-    document.fullscreenElement ??
+    doc.fullscreenElement ??
     doc.webkitFullscreenElement ??
     doc.mozFullScreenElement ??
     doc.msFullscreenElement ??
@@ -98,40 +84,64 @@ function getFullscreenElement(): Element | null {
   );
 }
 
-async function requestFullscreen(element: Element): Promise<boolean> {
-  const target = element as FullscreenEl;
-  const requester =
-    target.requestFullscreen ??
-    target.webkitRequestFullscreen ??
-    target.mozRequestFullScreen ??
-    target.msRequestFullscreen;
-
-  if (!requester) {
-    return false;
-  }
-
-  await Promise.resolve(requester.call(target));
-  return true;
-}
-
-async function exitFullscreen(): Promise<boolean> {
+function getFullscreenEnabled(): boolean {
   if (!isBrowserEnvironment()) {
     return false;
   }
 
-  const doc = document as FullscreenDoc;
-  const exiter =
-    document.exitFullscreen ??
-    doc.webkitExitFullscreen ??
-    doc.mozCancelFullScreen ??
-    doc.msExitFullscreen;
+  const doc = document as any;
+  
+  return (
+    doc.fullscreenEnabled ??
+    doc.webkitFullscreenEnabled ??
+    doc.mozFullScreenEnabled ??
+    doc.msFullscreenEnabled ??
+    false
+  );
+}
 
-  if (!exiter) {
-    return false;
+function requestFullscreenOnElement(element: Element): Promise<void> {
+  const el = element as any;
+  
+  if (el.requestFullscreen) {
+    return el.requestFullscreen();
   }
+  
+  if (el.webkitRequestFullscreen) {
+    return el.webkitRequestFullscreen();
+  }
+  
+  if (el.mozRequestFullScreen) {
+    return el.mozRequestFullScreen();
+  }
+  
+  if (el.msRequestFullscreen) {
+    return el.msRequestFullscreen();
+  }
+  
+  return Promise.reject(new Error('Fullscreen not supported'));
+}
 
-  await Promise.resolve(exiter.call(document));
-  return true;
+function exitFullscreenDocument(): Promise<void> {
+  const doc = document as any;
+  
+  if (doc.exitFullscreen) {
+    return doc.exitFullscreen();
+  }
+  
+  if (doc.webkitExitFullscreen) {
+    return doc.webkitExitFullscreen();
+  }
+  
+  if (doc.mozCancelFullScreen) {
+    return doc.mozCancelFullScreen();
+  }
+  
+  if (doc.msExitFullscreen) {
+    return doc.msExitFullscreen();
+  }
+  
+  return Promise.reject(new Error('Exit fullscreen not supported'));
 }
 
 export const fullscreen: FullscreenApi = {
@@ -139,55 +149,89 @@ export const fullscreen: FullscreenApi = {
     if (!isBrowserEnvironment()) {
       return false;
     }
-
-    const root = document.documentElement as FullscreenEl;
-    return Boolean(
-      root.requestFullscreen ||
-        root.webkitRequestFullscreen ||
-        root.mozRequestFullScreen ||
-        root.msRequestFullscreen,
-    );
+    return getFullscreenEnabled();
   },
-  isFullscreen: () => Boolean(getFullscreenElement()),
-  getElement: () => getFullscreenElement(),
+  
+  isFullscreen: () => {
+    return getFullscreenElement() !== null;
+  },
+  
+  getElement: () => {
+    return getFullscreenElement();
+  },
+  
   request: async (element) => {
     if (!isBrowserEnvironment()) {
       return false;
     }
-    return requestFullscreen(element ?? document.documentElement);
-  },
-  exit: async () => {
-    if (!getFullscreenElement()) {
+    
+    const target = element ?? document.documentElement;
+    
+    if (!getFullscreenEnabled()) {
+      return false;
+    }
+    
+    try {
+      await requestFullscreenOnElement(target);
       return true;
+    } catch {
+      return false;
     }
-    return exitFullscreen();
   },
-  toggle: async (element) => {
-    if (getFullscreenElement()) {
-      return exitFullscreen();
-    }
+  
+  exit: async () => {
     if (!isBrowserEnvironment()) {
       return false;
     }
-    return requestFullscreen(element ?? document.documentElement);
+    
+    if (!getFullscreenElement()) {
+      return true;
+    }
+    
+    try {
+      await exitFullscreenDocument();
+      return true;
+    } catch {
+      return false;
+    }
   },
+  
+  toggle: async (element) => {
+    if (!isBrowserEnvironment()) {
+      return false;
+    }
+    
+    if (getFullscreenElement()) {
+      return fullscreen.exit();
+    }
+    
+    return fullscreen.request(element);
+  },
+  
   onChange: (listener) => {
     if (!isBrowserEnvironment()) {
-      return () => undefined;
+      return () => {};
     }
 
-    const handler = () => listener(Boolean(getFullscreenElement()));
+    const handler = () => {
+      listener(getFullscreenElement() !== null);
+    };
+
     const events = [
       'fullscreenchange',
       'webkitfullscreenchange',
       'mozfullscreenchange',
       'MSFullscreenChange',
-    ] as const;
+    ];
 
-    events.forEach((eventName) => document.addEventListener(eventName, handler));
+    events.forEach((eventName) => {
+      document.addEventListener(eventName, handler);
+    });
 
     return () => {
-      events.forEach((eventName) => document.removeEventListener(eventName, handler));
+      events.forEach((eventName) => {
+        document.removeEventListener(eventName, handler);
+      });
     };
   },
 };

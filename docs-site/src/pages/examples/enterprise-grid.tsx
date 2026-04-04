@@ -19,7 +19,7 @@ const table = usePivotTable({
 });
 
 const tableWithFeatures = withSorting(withFiltering(table));
-exportCSV({ rows: table.getRowModel().rows });
+exportCSV({ rows: table.getRowModel().rows }).download();
 `;
 
 type LocalState = SortingTableState & FilteringTableState;
@@ -88,7 +88,7 @@ export default function EnterpriseGrid() {
       return obj;
     });
     import('@pivot/utils/index').then(({ exportCSV }) => {
-      exportCSV({ rows });
+      exportCSV({ rows }).download();
     });
   };
 
