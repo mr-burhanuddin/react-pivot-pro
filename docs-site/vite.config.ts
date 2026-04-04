@@ -12,11 +12,19 @@ export default defineConfig({
       '@': path.resolve(rootDir, 'src'),
       '@pivot': path.resolve(rootDir, '../src'),
     },
-    dedupe: ['react', 'react-dom', 'zustand'],
+    dedupe: ['react', 'react-dom'],
   },
   server: {
     fs: {
       allow: ['..'],
+    },
+  },
+  optimizeDeps: {
+    include: ['react-pivot-pro'],
+  },
+  build: {
+    rollupOptions: {
+      external: ['react-pivot-pro'],
     },
   },
 });

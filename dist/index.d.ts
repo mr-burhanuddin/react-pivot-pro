@@ -1,130 +1,90 @@
-import { StoreApi } from 'zustand/vanilla';
-
-interface Row<TData extends RowData> {
-    id: string;
-    index: number;
-    original: TData;
-    values: Record<string, unknown>;
-    getValue: <TValue = unknown>(columnId: string) => TValue | undefined;
-}
-interface RowModel<TData extends RowData> {
-    rows: Row<TData>[];
-    flatRows: Row<TData>[];
-    rowsById: Record<string, Row<TData>>;
-}
-
-type Updater<T> = T | ((previous: T) => T);
-interface SortingRule {
-    id: string;
-    desc: boolean;
-}
-interface ColumnFilter {
-    id: string;
-    value: unknown;
-}
-interface TableState {
-    sorting: SortingRule[];
-    filters: ColumnFilter[];
-    columnVisibility: Record<string, boolean>;
-    rowSelection: Record<string, boolean>;
-    expanded: Record<string, boolean>;
-}
-declare function createDefaultTableState(): TableState;
-
-interface PivotTablePluginContext<TData extends RowData, TState extends TableState = TableState> {
-    columns: Column<TData>[];
-    data: TData[];
-    state: TState;
-    setState: (updater: Updater<TState>) => void;
-    getColumnById: (columnId: string) => Column<TData> | undefined;
-}
-interface PivotTablePlugin<TData extends RowData, TState extends TableState = TableState> {
-    name: string;
-    getInitialState?: (state: TState) => Partial<TState>;
-    transformRows?: (rows: Row<TData>[], context: PivotTablePluginContext<TData, TState>) => Row<TData>[];
-    onStateChange?: (state: TState, previousState: TState, context: PivotTablePluginContext<TData, TState>) => void;
-}
-
-type RowData = Record<string, unknown>;
-interface PivotTableOptions<TData extends RowData, TState extends TableState = TableState> {
-    data: TData[];
-    columns: ColumnDef<TData>[];
-    state?: Partial<TState>;
-    initialState?: Partial<TState>;
-    onStateChange?: (nextState: TState, previousState: TState) => void;
-    plugins?: PivotTablePlugin<TData, TState>[];
-    getRowId?: (originalRow: TData, index: number) => string;
-    defaultColumn?: Partial<ColumnDef<TData>>;
-}
-interface PivotTableInstance<TData extends RowData, TState extends TableState = TableState> {
-    state: TState;
-    columns: Column<TData>[];
-    rowModel: RowModel<TData>;
-    getState: () => TState;
-    setState: (updater: Updater<TState>) => void;
-    getCoreRowModel: () => RowModel<TData>;
-    getRowModel: () => RowModel<TData>;
-    registerPlugin: (plugin: PivotTablePlugin<TData, TState>) => void;
-    unregisterPlugin: (pluginName: string) => boolean;
-    getPlugin: (pluginName: string) => PivotTablePlugin<TData, TState> | undefined;
-    getAllPlugins: () => PivotTablePlugin<TData, TState>[];
-}
-
-interface ColumnDef<TData extends RowData, TValue = unknown> {
-    id?: string;
-    accessorKey?: Extract<keyof TData, string>;
-    accessorFn?: (originalRow: TData, index: number) => TValue;
-    header?: string;
-    meta?: Record<string, unknown>;
-    enableSorting?: boolean;
-    enableFiltering?: boolean;
-    cell?: (val: any, row: any) => React.ReactNode;
-    width?: number;
-    pivot?: {
-        aggregator: 'sum' | 'count' | 'avg' | 'min' | 'max';
-    };
-}
-interface Column<TData extends RowData, TValue = unknown> extends Omit<ColumnDef<TData, TValue>, 'id'> {
-    id: string;
-}
+import { R as RowData, T as TableState, c as PivotTableOptions, a as PivotTableInstance } from './column-BnhUd1tF.js';
+export { d as Column, e as ColumnDef, C as ColumnFilter, P as PivotTablePlugin, f as PivotTablePluginContext, b as Row, g as RowModel, S as SortingRule, U as Updater, h as createDefaultTableState } from './column-BnhUd1tF.js';
+export { A as AggregationFn, a as AggregationInput, b as aggregationFns, c as createPivotEngineResult, d as createPivotPlugin, r as resolveAggregationFn, u as usePivot, w as withPivot } from './pivot-B-Fcws8h.js';
+export { DEFAULT_MANIFESTS, PivotTableStore, PluginManifest, PluginRegistry, StateValidator, createPivotTableStore, createPluginRegistry } from './store/index.js';
+export { useVirtualRows } from './hooks/index.js';
+import { VirtualizerOptions, Virtualizer, VirtualItem } from '@tanstack/virtual-core';
+export { createSortingPlugin, useSorting, withSorting } from './plugins/sorting.js';
+export { createFilteringPlugin, useFiltering, withFiltering } from './plugins/filtering.js';
+export { createGroupingPlugin, useGrouping, withGrouping } from './plugins/grouping.js';
+export { createColumnVisibilityPlugin, withColumnVisibility } from './plugins/columnVisibility.js';
+export { createColumnOrderingPlugin, withColumnOrdering } from './plugins/columnOrdering.js';
+export { createColumnPinningPlugin, withColumnPinning } from './plugins/columnPinning.js';
+export { createDndRowPlugin, useDndRow, withDndRow } from './plugins/dndRow.js';
+export { createDndColumnPlugin, useDndColumn, withDndColumn } from './plugins/dndColumn.js';
+import 'zustand/vanilla';
+import '@dnd-kit/core';
 
 declare function usePivotTable<TData extends RowData, TState extends TableState = TableState>(options: PivotTableOptions<TData, TState>): PivotTableInstance<TData, TState>;
 
-interface StateValidator<TState extends TableState = TableState> {
-    name: string;
-    validate: (state: Partial<TState>) => {
-        valid: boolean;
-        message?: string;
-    };
+type CsvPrimitive = string | number | boolean | null | undefined | Date;
+interface CsvColumn<TRecord extends Record<string, unknown> = Record<string, unknown>> {
+    id: string;
+    header?: string;
+    accessor?: (record: TRecord, index: number) => CsvPrimitive;
 }
-interface PivotTableStore<TState extends TableState> {
-    state: TState;
-    setState: (updater: Updater<TState>) => void;
-    resetState: (nextState: TState) => void;
-    addValidator: (validator: StateValidator<TState>) => void;
-    removeValidator: (name: string) => void;
+interface ExportCsvOptions<TRecord extends Record<string, unknown> = Record<string, unknown>> {
+    rows: TRecord[];
+    columns?: CsvColumn<TRecord>[];
+    includeHeader?: boolean;
+    delimiter?: string;
+    lineBreak?: '\n' | '\r\n';
+    fileName?: string;
+    quoteAllFields?: boolean;
+    sanitizeValues?: boolean;
 }
-declare function createPivotTableStore<TState extends TableState>(initialState: TState): StoreApi<PivotTableStore<TState>>;
+interface ExportCsvResult {
+    csv: string;
+    fileName: string;
+    blob: Blob | null;
+    download: () => void;
+}
+declare function serializeCSV<TRecord extends Record<string, unknown>>(options: ExportCsvOptions<TRecord>): string;
+declare function exportCSV<TRecord extends Record<string, unknown>>(options: ExportCsvOptions<TRecord>): ExportCsvResult;
 
-interface PluginManifest {
-    name: string;
-    stateKeys: string[];
-    conflictsWith: string[];
-    description?: string;
+interface CopyToClipboardOptions {
+    text: string;
+    fallbackToExecCommand?: boolean;
 }
-interface PluginRegistry<TState extends TableState = TableState> {
-    register: (plugin: PivotTablePlugin<any, TState>, manifest: PluginManifest) => void;
-    unregister: (pluginName: string) => boolean;
-    getPlugin: (name: string) => PivotTablePlugin<any, TState> | undefined;
-    getManifest: (name: string) => PluginManifest | undefined;
-    getAll: () => PivotTablePlugin<any, TState>[];
-    getAllManifests: () => PluginManifest[];
-    hasConflict: (name: string) => {
-        hasConflict: boolean;
-        conflictsWith: string[];
-    };
+interface FullscreenApi {
+    isSupported: () => boolean;
+    isFullscreen: () => boolean;
+    getElement: () => Element | null;
+    request: (element?: Element) => Promise<boolean>;
+    exit: () => Promise<boolean>;
+    toggle: (element?: Element) => Promise<boolean>;
+    onChange: (listener: (isFullscreen: boolean) => void) => () => void;
 }
-declare function createPluginRegistry<TState extends TableState = TableState>(): PluginRegistry<TState>;
-declare const DEFAULT_MANIFESTS: Record<string, PluginManifest>;
+declare function copyToClipboard(options: CopyToClipboardOptions): Promise<boolean>;
+declare const fullscreen: FullscreenApi;
 
-export { type Column, type ColumnDef, type ColumnFilter, DEFAULT_MANIFESTS, type PivotTableInstance, type PivotTableOptions, type PivotTablePlugin, type PivotTablePluginContext, type PivotTableStore, type PluginManifest, type PluginRegistry, type Row, type RowData, type RowModel, type SortingRule, type StateValidator, type TableState, type Updater, createDefaultTableState, createPivotTableStore, createPluginRegistry, usePivotTable };
+type ScrollMode = 'element' | 'window';
+interface UseVirtualColumnsOptions<TScrollElement extends Element | Window = Element, TItemElement extends Element = Element> {
+    count: number;
+    getScrollElement: () => TScrollElement | null;
+    estimateSize: (index: number) => number;
+    scrollMode?: ScrollMode;
+    overscan?: number;
+    paddingStart?: number;
+    paddingEnd?: number;
+    scrollPaddingStart?: number;
+    scrollPaddingEnd?: number;
+    initialOffset?: number | (() => number);
+    enabled?: boolean;
+    debug?: boolean;
+    getItemKey?: VirtualizerOptions<TScrollElement, TItemElement>['getItemKey'];
+    rangeExtractor?: VirtualizerOptions<TScrollElement, TItemElement>['rangeExtractor'];
+    observeElementRect?: VirtualizerOptions<TScrollElement, TItemElement>['observeElementRect'];
+    observeElementOffset?: VirtualizerOptions<TScrollElement, TItemElement>['observeElementOffset'];
+    scrollToFn?: VirtualizerOptions<TScrollElement, TItemElement>['scrollToFn'];
+    measureElement?: VirtualizerOptions<TScrollElement, TItemElement>['measureElement'];
+    onChange?: (instance: Virtualizer<TScrollElement, TItemElement>, sync: boolean) => void;
+}
+interface UseVirtualColumnsResult<TScrollElement extends Element | Window = Element, TItemElement extends Element = Element> {
+    virtualizer: Virtualizer<TScrollElement, TItemElement>;
+    virtualColumns: VirtualItem[];
+    totalSize: number;
+}
+declare function useVirtualColumns<TScrollElement extends Element | Window = Element, TItemElement extends Element = Element>(options: UseVirtualColumnsOptions<TScrollElement, TItemElement>): UseVirtualColumnsResult<TScrollElement, TItemElement>;
+
+export { PivotTableInstance, PivotTableOptions, RowData, TableState, copyToClipboard, exportCSV, fullscreen, serializeCSV, usePivotTable, useVirtualColumns };

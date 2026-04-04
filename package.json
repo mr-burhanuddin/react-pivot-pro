@@ -1,30 +1,117 @@
 {
   "name": "react-pivot-pro",
   "version": "0.1.0",
-  "private": false,
+  "description": "Headless, plugin-driven pivot table engine for React + TypeScript",
+  "keywords": [
+    "react",
+    "table",
+    "pivot",
+    "grid",
+    "data-grid",
+    "headless",
+    "plugin"
+  ],
+  "license": "MIT",
+  "homepage": "https://react-pivot-pro.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mr-burhanuddin/react-pivot-pro.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mr-burhanuddin/react-pivot-pro/issues"
+  },
   "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./plugins/sorting": {
+      "types": "./dist/plugins/sorting.d.ts",
+      "import": "./dist/plugins/sorting.js",
+      "require": "./dist/plugins/sorting.cjs"
+    },
+    "./plugins/filtering": {
+      "types": "./dist/plugins/filtering.d.ts",
+      "import": "./dist/plugins/filtering.js",
+      "require": "./dist/plugins/filtering.cjs"
+    },
+    "./plugins/grouping": {
+      "types": "./dist/plugins/grouping.d.ts",
+      "import": "./dist/plugins/grouping.js",
+      "require": "./dist/plugins/grouping.cjs"
+    },
+    "./plugins/pivot": {
+      "types": "./dist/plugins/pivot.d.ts",
+      "import": "./dist/plugins/pivot.js",
+      "require": "./dist/plugins/pivot.cjs"
+    },
+    "./hooks": {
+      "types": "./dist/hooks/index.d.ts",
+      "import": "./dist/hooks/index.js",
+      "require": "./dist/hooks/index.cjs"
+    },
+    "./store": {
+      "types": "./dist/store/index.d.ts",
+      "import": "./dist/store/index.js",
+      "require": "./dist/store/index.cjs"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "build:types": "tsup --dts-only",
     "lint": "eslint .",
-    "test": "vitest"
+    "test": "vitest",
+    "test:run": "vitest --run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run build",
+    "docs:dev": "npm run dev --prefix docs-site",
+    "docs:build": "npm run build --prefix docs-site",
+    "docs:preview": "npm run preview --prefix docs-site",
+    "preinstall": "npx only-allow npm"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@tanstack/virtual-core": "^3.13.23",
     "i18next": "^26.0.3",
-    "react": "^19.2.4",
     "zustand": "^5.0.12"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.14",
+    "only-allow": "^1.2.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.2",
     "vitest": "^4.1.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

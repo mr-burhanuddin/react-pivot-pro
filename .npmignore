@@ -1,0 +1,67 @@
+# Source code
+src/
+docs-site/
+docs/
+
+# Configuration files
+tsconfig.json
+tsup.config.ts
+eslint.config.*
+vitest.config.*
+.prettierrc*
+.eslintrc*
+
+# Development files
+*.md
+!LICENSE.md
+AGENT.md
+CONTEXT.md
+
+# Version control
+.git
+.gitignore
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Build artifacts (only dist is published)
+# dist/ is INCLUDED via "files" in package.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.turbo/
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/__tests__/**
+**/__mocks__/**
+
+# Misc
+*.local
+.env
+.env.*
+!.env.example

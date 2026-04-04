@@ -1,5 +1,18 @@
 # React Pivot Pro
 
+![npm version](https://img.shields.io/npm/v/react-pivot-pro)
+![npm downloads](https://img.shields.io/npm/dm/react-pivot-pro)
+![license](https://img.shields.io/npm/l/react-pivot-pro)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![React](https://img.shields.io/badge/React-18%2B-blue)
+
+[![Build Status](https://github.com/your-username/react-pivot-pro/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/react-pivot-pro/actions)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/react-pivot-pro)](https://bundlephobia.com/package/react-pivot-pro)
+
+[Documentation](https://react-pivot-pro.vercel.app) | [API Reference](https://react-pivot-pro.vercel.app/docs) | [npm](https://www.npmjs.com/package/react-pivot-pro)
+
+---
+
 Headless, plugin-driven pivot table engine for React + TypeScript.
 
 `react-pivot-pro` gives you a typed core table state/model layer, composable feature plugins (sorting, filtering, grouping, pivoting, DnD), and utility hooks (virtualization, export, clipboard/fullscreen) without forcing any UI framework.
@@ -34,7 +47,7 @@ npm install react-pivot-pro
 ```
 
 Peer/runtime deps used by feature modules:
-- `react`
+- `react` (>=18.0.0)
 - `zustand`
 - `@tanstack/virtual-core`
 - `@dnd-kit/core`
@@ -43,9 +56,14 @@ Peer/runtime deps used by feature modules:
 
 ```tsx
 import { useMemo } from 'react';
-import { usePivotTable, type ColumnDef } from 'react-pivot-pro';
-import { createSortingPlugin, withSorting } from 'react-pivot-pro/src/plugins/sorting';
-import { createFilteringPlugin, withFiltering } from 'react-pivot-pro/src/plugins/filtering';
+import { 
+  usePivotTable, 
+  createSortingPlugin, 
+  withSorting,
+  createFilteringPlugin,
+  withFiltering,
+  type ColumnDef 
+} from 'react-pivot-pro';
 
 type Sale = {
   id: string;
@@ -69,10 +87,6 @@ export function useSalesTable(data: Sale[]) {
     plugins: [createFilteringPlugin(), createSortingPlugin()],
     initialState: {
       sorting: [{ id: 'amount', desc: true }],
-      filters: [],
-      columnVisibility: {},
-      rowSelection: {},
-      expanded: {},
     },
   });
 
@@ -94,65 +108,6 @@ Each plugin:
 - can expose feature APIs via `withX(table)`
 
 Register plugins in `usePivotTable({ plugins: [...] })`, then augment instance APIs with `withX(...)`.
-
-## Pivot Example
-
-```tsx
-import { usePivotTable, type ColumnDef } from 'react-pivot-pro';
-import { createGroupingPlugin, withGrouping } from 'react-pivot-pro/src/plugins/grouping';
-import { createPivotPlugin, withPivot } from 'react-pivot-pro/src/plugins/pivot';
-
-type Sale = {
-  region: string;
-  category: string;
-  month: string;
-  amount: number;
-  quantity: number;
-};
-
-export function usePivotedSales(data: Sale[]) {
-  const columns: ColumnDef<Sale>[] = [
-    { id: 'region', accessorKey: 'region' },
-    { id: 'category', accessorKey: 'category' },
-    { id: 'month', accessorKey: 'month' },
-    { id: 'amount', accessorKey: 'amount' },
-    { id: 'quantity', accessorKey: 'quantity' },
-  ];
-
-  const table = usePivotTable<Sale>({
-    data,
-    columns,
-    plugins: [
-      createGroupingPlugin(),
-      createPivotPlugin({
-        defaultValues: [
-          { id: 'amount', aggregation: 'sum' },
-          { id: 'quantity', aggregation: 'avg' },
-        ],
-      }),
-    ],
-    initialState: {
-      rowGrouping: ['region'],
-      columnGrouping: ['month'],
-      pivotEnabled: true,
-      pivotValues: [
-        { id: 'amount', aggregation: 'sum' },
-        { id: 'quantity', aggregation: 'avg' },
-      ],
-      sorting: [],
-      filters: [],
-      columnVisibility: {},
-      rowSelection: {},
-      expanded: {},
-      expandedGroups: {},
-    } as any,
-  });
-
-  const pivotTable = withPivot(withGrouping(table));
-  const pivotResult = pivotTable.pivot.getPivotResult();
-  return { table: pivotTable, pivotResult };
-}
-```
 
 ## API Overview
 
@@ -187,13 +142,36 @@ export function usePivotedSales(data: Sale[]) {
 - Keep custom aggregation functions pure and allocation-light.
 - For very large pivot workloads, use the server adapter path in the pivot plugin.
 
-## Roadmap
+## Development
 
-- Stronger built-in plugin export surface from package root
-- Tree data + subtotal/rollup strategies
-- More aggregation presets and typed value formatters
-- Worker/off-main-thread pivot execution
-- Devtools for plugin/state inspection
+```bash
+# Install dependencies
+npm install
+
+# Build the library
+npm run build
+
+# Watch mode
+npm run dev
+
+# Run tests
+npm run test
+
+# Type check
+npm run typecheck
+
+# Lint
+npm run lint
+
+# Run documentation site
+npm run docs:dev
+```
+
+## Documentation
+
+- [Full Documentation](https://react-pivot-pro.vercel.app)
+- [API Reference](https://react-pivot-pro.vercel.app/docs)
+- [Examples](https://react-pivot-pro.vercel.app/examples)
 
 ## Contributing
 
@@ -212,9 +190,6 @@ Guidelines:
 - Avoid `any`; preserve strict typing.
 - Optimize for stable references and minimal recomputation.
 
-## Documentation
+## License
 
-- [Docs Index](./docs/README.md)
-- [`usePivotTable` API](./docs/API-usePivotTable.md)
-- [Feature Catalog](./docs/features/README.md)
-- [Examples](./docs/examples)
+MIT
