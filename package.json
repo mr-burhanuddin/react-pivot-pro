@@ -1,6 +1,6 @@
 {
   "name": "react-pivot-pro",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Headless, plugin-driven pivot table engine for React + TypeScript",
   "keywords": [
     "react",
