@@ -1,0 +1,1 @@
+import{j as e,r}from"./index-d6EXP2Gi.js";function n({component:a}){return e.jsx(r.Suspense,{fallback:e.jsx("div",{className:"example-fallback",children:"Loading example..."}),children:e.jsx(a,{})})}export{n as E};

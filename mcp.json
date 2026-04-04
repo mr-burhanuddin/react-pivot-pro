@@ -1,0 +1,59 @@
+{
+  "name": "react-pivot-pro",
+  "description": "High-performance headless React pivot table library with plugin architecture",
+  "version": "1.0.0",
+
+  "context": {
+    "tech_stack": [
+      "React 18",
+      "TypeScript",
+      "Zustand",
+      "TanStack Virtual",
+      "DnD Kit"
+    ],
+    "architecture": "Headless core + plugin system + optional UI layer",
+    "constraints": [
+      "No monolithic code",
+      "All features must be plugin-based",
+      "Tree-shakable modules only",
+      "Strict TypeScript (no any)",
+      "SSR safe (no direct DOM in core)"
+    ]
+  },
+  "capabilities": [
+    "code_generation",
+    "refactoring",
+    "test_generation",
+    "documentation_generation",
+    "example_generation"
+  ],
+  "documentation_rules": {
+    "style": "clear, developer-first, example-heavy",
+    "requirements": [
+      "Every feature must have a code example",
+      "Every hook must have usage + API table",
+      "No vague descriptions",
+      "Show real-world usage"
+    ]
+  },
+
+  "tools": [
+    {
+      "name": "file_writer",
+      "description": "Write or update project files"
+    },
+    {
+      "name": "typescript_compiler",
+      "description": "Validate type correctness"
+    },
+    {
+      "name": "test_runner",
+      "description": "Run unit tests"
+    }
+  ],
+
+  "memory": {
+    "persist": true,
+    "scope": "project"
+  }
+}

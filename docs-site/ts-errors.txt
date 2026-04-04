@@ -1,0 +1,38 @@
+src/pages/api-plugins.tsx(13,18): error TS2304: Cannot find name 'useSorting'.
+src/pages/api-plugins.tsx(13,18): error TS2695: Left side of comma operator is unused and has no side effects.
+src/pages/api-plugins.tsx(13,18): error TS2695: Left side of comma operator is unused and has no side effects.
+src/pages/api-plugins.tsx(13,18): error TS2695: Left side of comma operator is unused and has no side effects.
+src/pages/api-plugins.tsx(13,18): error TS2695: Left side of comma operator is unused and has no side effects.
+src/pages/api-plugins.tsx(13,18): error TS18007: JSX expressions may not use the comma operator. Did you mean to write an array?
+src/pages/api-plugins.tsx(13,30): error TS2304: Cannot find name 'useFiltering'.
+src/pages/api-plugins.tsx(13,44): error TS2304: Cannot find name 'useGrouping'.
+src/pages/api-plugins.tsx(13,57): error TS2304: Cannot find name 'usePivot'.
+src/pages/api-plugins.tsx(13,67): error TS2304: Cannot find name 'useVirtualRows'.
+src/pages/examples/customization.tsx(2,31): error TS2307: Cannot find module 'react-pivot-pro/core' or its corresponding type declarations.
+src/pages/examples/customization.tsx(4,30): error TS2307: Cannot find module './mockData' or its corresponding type declarations.
+src/pages/examples/customization.tsx(69,46): error TS7006: Parameter 'hg' implicitly has an 'any' type.
+src/pages/examples/customization.tsx(71,37): error TS7006: Parameter 'header' implicitly has an 'any' type.
+src/pages/examples/customization.tsx(80,59): error TS7006: Parameter 'row' implicitly has an 'any' type.
+src/pages/examples/customization.tsx(82,48): error TS7006: Parameter 'cell' implicitly has an 'any' type.
+src/pages/examples/enterprise-grid.tsx(2,31): error TS2307: Cannot find module 'react-pivot-pro/core' or its corresponding type declarations.
+src/pages/examples/enterprise-grid.tsx(3,28): error TS2307: Cannot find module 'react-pivot-pro/plugins/sorting' or its corresponding type declarations.
+src/pages/examples/enterprise-grid.tsx(4,30): error TS2307: Cannot find module 'react-pivot-pro/plugins/filtering' or its corresponding type declarations.
+src/pages/examples/enterprise-grid.tsx(5,32): error TS2307: Cannot find module 'react-pivot-pro/plugins/virtualization' or its corresponding type declarations.
+src/pages/examples/enterprise-grid.tsx(7,30): error TS2307: Cannot find module './mockData' or its corresponding type declarations.
+src/pages/examples/financial-sales.tsx(2,31): error TS2307: Cannot find module 'react-pivot-pro/core' or its corresponding type declarations.
+src/pages/examples/financial-sales.tsx(3,32): error TS2307: Cannot find module 'react-pivot-pro/plugins/virtualization' or its corresponding type declarations.
+src/pages/examples/financial-sales.tsx(5,30): error TS2307: Cannot find module './mockData' or its corresponding type declarations.
+src/pages/examples/financial-sales.tsx(76,46): error TS7006: Parameter 'hg' implicitly has an 'any' type.
+src/pages/examples/financial-sales.tsx(78,37): error TS7006: Parameter 'header' implicitly has an 'any' type.
+src/pages/examples/financial-sales.tsx(88,61): error TS7006: Parameter 'row' implicitly has an 'any' type.
+src/pages/examples/financial-sales.tsx(90,48): error TS7006: Parameter 'cell' implicitly has an 'any' type.
+src/pages/examples/pivot-analytics.tsx(2,31): error TS2307: Cannot find module 'react-pivot-pro/core' or its corresponding type declarations.
+src/pages/examples/pivot-analytics.tsx(3,29): error TS2307: Cannot find module 'react-pivot-pro/plugins/grouping' or its corresponding type declarations.
+src/pages/examples/pivot-analytics.tsx(4,26): error TS2307: Cannot find module 'react-pivot-pro/plugins/pivot' or its corresponding type declarations.
+src/pages/examples/pivot-analytics.tsx(6,30): error TS2307: Cannot find module './mockData' or its corresponding type declarations.
+src/pages/examples/server-side.tsx(2,31): error TS2307: Cannot find module 'react-pivot-pro/core' or its corresponding type declarations.
+src/pages/examples/server-side.tsx(4,52): error TS2307: Cannot find module './mockData' or its corresponding type declarations.
+src/pages/examples/server-side.tsx(67,46): error TS7006: Parameter 'hg' implicitly has an 'any' type.
+src/pages/examples/server-side.tsx(69,37): error TS7006: Parameter 'header' implicitly has an 'any' type.
+src/pages/examples/server-side.tsx(76,47): error TS7006: Parameter 'row' implicitly has an 'any' type.
+src/pages/examples/server-side.tsx(78,48): error TS7006: Parameter 'cell' implicitly has an 'any' type.
