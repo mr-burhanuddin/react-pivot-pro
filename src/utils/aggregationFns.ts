@@ -8,18 +8,24 @@ export type AggregationFn<TData extends RowData = RowData> = (
 function toFiniteNumbers(values: unknown[]): number[] {
   return values
     .map((value) => {
-      if (typeof value === 'number') {
+      if (typeof value === 'number' && Number.isFinite(value)) {
         return value;
       }
-      const parsed = Number(value);
-      return Number.isFinite(parsed) ? parsed : null;
+      if (typeof value === 'string') {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+      return null;
     })
     .filter((value): value is number => value !== null);
 }
 
 export const aggregationFns: Record<string, AggregationFn> = {
   count: (values) => values.length,
-  sum: (values) => toFiniteNumbers(values).reduce((acc, value) => acc + value, 0),
+  sum: (values) => {
+    const numbers = toFiniteNumbers(values);
+    return numbers.reduce((acc, value) => acc + value, 0);
+  },
   avg: (values) => {
     const numbers = toFiniteNumbers(values);
     if (numbers.length === 0) {
@@ -29,11 +35,17 @@ export const aggregationFns: Record<string, AggregationFn> = {
   },
   min: (values) => {
     const numbers = toFiniteNumbers(values);
-    return numbers.length === 0 ? undefined : Math.min(...numbers);
+    if (numbers.length === 0) {
+      return undefined;
+    }
+    return numbers.reduce((min, val) => val < min ? val : min, numbers[0]);
   },
   max: (values) => {
     const numbers = toFiniteNumbers(values);
-    return numbers.length === 0 ? undefined : Math.max(...numbers);
+    if (numbers.length === 0) {
+      return undefined;
+    }
+    return numbers.reduce((max, val) => val > max ? val : max, numbers[0]);
   },
   median: (values) => {
     const numbers = toFiniteNumbers(values).sort((a, b) => a - b);
@@ -46,7 +58,17 @@ export const aggregationFns: Record<string, AggregationFn> = {
     }
     return numbers[middle];
   },
-  unique: (values) => Array.from(new Set(values)).length,
+  unique: (values) => {
+    const seen = new Set<unknown>();
+    for (const val of values) {
+      if (val != null && typeof val === 'object') {
+        seen.add(JSON.stringify(val));
+      } else {
+        seen.add(val);
+      }
+    }
+    return seen.size;
+  },
   first: (values) => values[0],
   last: (values) => values[values.length - 1],
 };

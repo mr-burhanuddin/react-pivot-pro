@@ -50,20 +50,13 @@ function areSortingRulesEqual(next: SortingRule[], previous: SortingRule[]): boo
   return true;
 }
 
-function compareValues(left: unknown, right: unknown): number {
-  if (left === right) {
-    return 0;
-  }
-
-  if (left == null) {
-    return 1;
-  }
-
-  if (right == null) {
-    return -1;
-  }
+function comparePrimitives(left: unknown, right: unknown): number {
+  if (left === right) return 0;
+  if (left == null) return 1;
+  if (right == null) return -1;
 
   if (typeof left === 'number' && typeof right === 'number') {
+    if (Number.isNaN(left) && Number.isNaN(right)) return 0;
     return left - right;
   }
 
@@ -75,7 +68,7 @@ function compareValues(left: unknown, right: unknown): number {
     return Number(left) - Number(right);
   }
 
-  return String(left).localeCompare(String(right));
+  return String(left).localeCompare(String(right), undefined, { sensitivity: 'base' });
 }
 
 export function createSortingPlugin<
@@ -83,9 +76,12 @@ export function createSortingPlugin<
   TState extends SortingTableState = SortingTableState,
 >(options: SortingPluginOptions = {}): PivotTablePlugin<TData, TState> {
   const isMultiSortEvent = options.isMultiSortEvent ?? ((multi) => Boolean(multi));
-  let lastRowsRef: Row<TData>[] | null = null;
-  let lastSortingRef: SortingRule[] = [];
-  let lastResultRef: Row<TData>[] | null = null;
+  
+  const cache = {
+    rows: null as Row<TData>[] | null,
+    sorting: [] as SortingRule[],
+    result: null as Row<TData>[] | null,
+  };
 
   return {
     name: 'sorting',
@@ -96,41 +92,52 @@ export function createSortingPlugin<
     transformRows: (rows, context) => {
       const sorting = context.state.sorting ?? [];
 
-      if (
-        lastRowsRef === rows &&
-        lastResultRef &&
-        areSortingRulesEqual(sorting, lastSortingRef)
-      ) {
-        return lastResultRef;
+      if (cache.rows === rows && cache.result && areSortingRulesEqual(sorting, cache.sorting)) {
+        return cache.result;
       }
 
       if (sorting.length === 0) {
-        lastRowsRef = rows;
-        lastSortingRef = sorting.slice();
-        lastResultRef = rows;
+        cache.rows = rows;
+        cache.sorting = [];
+        cache.result = rows;
         return rows;
       }
 
-      const sortedRows = [...rows];
-      sortedRows.sort((leftRow, rightRow) => {
-        for (const rule of sorting) {
-          const comparison = compareValues(
-            leftRow.getValue(rule.id),
-            rightRow.getValue(rule.id),
-          );
+      const len = rows.length;
+      const indices = new Int32Array(len);
+      for (let i = 0; i < len; i++) indices[i] = i;
 
-          if (comparison !== 0) {
-            return rule.desc ? comparison * -1 : comparison;
+      const sortColumnIds = sorting.map(r => r.id);
+      const sortValues: unknown[][] = sorting.map(() => new Array(len));
+      
+      for (let rowIdx = 0; rowIdx < len; rowIdx++) {
+        const rowValues = rows[rowIdx].values;
+        for (let colIdx = 0; colIdx < sorting.length; colIdx++) {
+          sortValues[colIdx][rowIdx] = rowValues[sortColumnIds[colIdx]];
+        }
+      }
+
+      indices.sort((a, b) => {
+        for (let colIdx = 0; colIdx < sorting.length; colIdx++) {
+          const left = sortValues[colIdx][a];
+          const right = sortValues[colIdx][b];
+          const cmp = comparePrimitives(left, right);
+          if (cmp !== 0) {
+            return sorting[colIdx].desc ? -cmp : cmp;
           }
         }
-
         return 0;
       });
 
-      lastRowsRef = rows;
-      lastSortingRef = sorting.slice();
-      lastResultRef = sortedRows;
-      return sortedRows;
+      const result: Row<TData>[] = new Array(len);
+      for (let i = 0; i < len; i++) {
+        result[i] = rows[indices[i]];
+      }
+
+      cache.rows = rows;
+      cache.sorting = sorting;
+      cache.result = result;
+      return result;
     },
     onStateChange: (state, previousState, context) => {
       const nextSorting = state.sorting ?? [];
@@ -194,7 +201,7 @@ export function createSortingApi<
         const previousSorting = previous.sorting ?? [];
         const nextSorting =
           typeof updater === 'function'
-            ? updater(previousSorting)
+            ? [...updater(previousSorting)]
             : updater;
 
         return {

@@ -16,6 +16,7 @@ export interface ExportCsvOptions<
   lineBreak?: '\n' | '\r\n';
   fileName?: string;
   quoteAllFields?: boolean;
+  sanitizeValues?: boolean;
 }
 
 export interface ExportCsvResult {
@@ -25,20 +26,34 @@ export interface ExportCsvResult {
   download: () => void;
 }
 
+const FORMULA_TRIGGER_CHARS = /^[=+\-@\t\r\n]/;
+const CONTROL_CHARS = /[\x00-\x08\x0B\x0C\x0E-\x1F]/g;
+
 function escapeCsvCell(
   value: CsvPrimitive,
   delimiter: string,
   quoteAllFields: boolean,
+  sanitize: boolean,
 ): string {
   if (value == null) {
     return '';
   }
 
-  const rawValue = value instanceof Date ? value.toISOString() : String(value);
-  const raw =
-    rawValue.length > 0 && /^[=+\-@]/.test(rawValue)
-      ? `'${rawValue}`
-      : rawValue;
+  let raw: string;
+  if (value instanceof Date) {
+    raw = value.toISOString();
+  } else {
+    raw = String(value);
+    
+    if (sanitize) {
+      raw = raw.replace(CONTROL_CHARS, '');
+      
+      if (raw.length > 0 && FORMULA_TRIGGER_CHARS.test(raw)) {
+        raw = `'${raw}`;
+      }
+    }
+  }
+
   const mustQuote =
     quoteAllFields ||
     raw.includes('"') ||
@@ -69,6 +84,7 @@ export function serializeCSV<TRecord extends Record<string, unknown>>(
     delimiter = ',',
     lineBreak = '\n',
     quoteAllFields = false,
+    sanitizeValues = true,
   } = options;
 
   const columns = options.columns ?? inferColumns(rows);
@@ -76,7 +92,7 @@ export function serializeCSV<TRecord extends Record<string, unknown>>(
 
   if (includeHeader) {
     const headerLine = columns
-      .map((column) => escapeCsvCell(column.header ?? column.id, delimiter, quoteAllFields))
+      .map((column) => escapeCsvCell(column.header ?? column.id, delimiter, quoteAllFields, sanitizeValues))
       .join(delimiter);
     lines.push(headerLine);
   }
@@ -87,7 +103,7 @@ export function serializeCSV<TRecord extends Record<string, unknown>>(
         const value = column.accessor
           ? column.accessor(row, index)
           : (row[column.id] as CsvPrimitive);
-        return escapeCsvCell(value, delimiter, quoteAllFields);
+        return escapeCsvCell(value, delimiter, quoteAllFields, sanitizeValues);
       })
       .join(delimiter);
     lines.push(line);
@@ -99,7 +115,7 @@ export function serializeCSV<TRecord extends Record<string, unknown>>(
 export function exportCSV<TRecord extends Record<string, unknown>>(
   options: ExportCsvOptions<TRecord>,
 ): ExportCsvResult {
-  const fileName = options.fileName ?? 'export.csv';
+  const fileName = (options.fileName ?? 'export.csv').replace(/[<>:"/\\|?*]/g, '_');
   const csv = serializeCSV(options);
   const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
   const blob = isBrowser ? new Blob([csv], { type: 'text/csv;charset=utf-8;' }) : null;

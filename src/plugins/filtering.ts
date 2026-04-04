@@ -103,11 +103,13 @@ export function createFilteringPlugin<
   const rowFilterFn = options.rowFilterFn ?? defaultRowFilterFn;
   const globalFilterFn = options.globalFilterFn ?? defaultGlobalFilterFn;
 
-  let lastRowsRef: Row<TData>[] | null = null;
-  let lastColumnsRef: string[] = [];
-  let lastFiltersRef: ColumnFilter[] = [];
-  let lastGlobalFilterRef: unknown = undefined;
-  let lastResultRef: Row<TData>[] | null = null;
+  const cache = {
+    rows: null as Row<TData>[] | null,
+    filterableIds: [] as string[],
+    filters: [] as ColumnFilter[],
+    globalFilter: undefined as unknown,
+    result: null as Row<TData>[] | null,
+  };
 
   return {
     name: 'filtering',
@@ -119,54 +121,65 @@ export function createFilteringPlugin<
     transformRows: (rows, context) => {
       const columnFilters = context.state.filters ?? [];
       const globalFilter = context.state.globalFilter;
-      const filterableColumnIds = context.columns
+      
+      const filterableIds = context.columns
         .filter((column) => column.enableFiltering !== false)
         .map((column) => column.id);
 
       if (
-        lastRowsRef === rows &&
-        lastResultRef &&
-        filterableColumnIds.length === lastColumnsRef.length &&
-        filterableColumnIds.every((columnId, index) => columnId === lastColumnsRef[index]) &&
-        areFiltersEqual(columnFilters, lastFiltersRef) &&
-        globalFilter === lastGlobalFilterRef
+        cache.rows === rows &&
+        cache.result &&
+        filterableIds.length === cache.filterableIds.length &&
+        filterableIds.every((id, i) => id === cache.filterableIds[i]) &&
+        areFiltersEqual(columnFilters, cache.filters) &&
+        globalFilter === cache.globalFilter
       ) {
-        return lastResultRef;
+        return cache.result;
       }
 
       if (columnFilters.length === 0 && (globalFilter == null || globalFilter === '')) {
-        lastRowsRef = rows;
-        lastColumnsRef = filterableColumnIds.slice();
-        lastFiltersRef = columnFilters.slice();
-        lastGlobalFilterRef = globalFilter;
-        lastResultRef = rows;
+        cache.rows = rows;
+        cache.filterableIds = filterableIds;
+        cache.filters = columnFilters;
+        cache.globalFilter = globalFilter;
+        cache.result = rows;
         return rows;
       }
 
-      const filteredRows = rows.filter((row) => {
-        for (const filter of columnFilters) {
-          if (!filterableColumnIds.includes(filter.id)) {
-            continue;
-          }
+      const filterableSet = new Set(filterableIds);
+      const activeFilters = columnFilters.filter(f => filterableSet.has(f.id));
+      const len = rows.length;
+      const result: Row<TData>[] = [];
 
-          if (!rowFilterFn(row.getValue(filter.id), filter.value, row as Row<RowData>)) {
-            return false;
+      for (let i = 0; i < len; i++) {
+        const row = rows[i];
+        let passes = true;
+
+        for (let f = 0; f < activeFilters.length; f++) {
+          const filter = activeFilters[f];
+          if (!rowFilterFn(row.values[filter.id], filter.value, row as Row<RowData>)) {
+            passes = false;
+            break;
           }
         }
 
-        if (!globalFilterFn(row as Row<RowData>, globalFilter, filterableColumnIds)) {
-          return false;
+        if (passes && globalFilter != null && globalFilter !== '') {
+          if (!globalFilterFn(row as Row<RowData>, globalFilter, filterableIds)) {
+            passes = false;
+          }
         }
 
-        return true;
-      });
+        if (passes) {
+          result.push(row);
+        }
+      }
 
-      lastRowsRef = rows;
-      lastColumnsRef = filterableColumnIds.slice();
-      lastFiltersRef = columnFilters.slice();
-      lastGlobalFilterRef = globalFilter;
-      lastResultRef = filteredRows;
-      return filteredRows;
+      cache.rows = rows;
+      cache.filterableIds = filterableIds;
+      cache.filters = columnFilters;
+      cache.globalFilter = globalFilter;
+      cache.result = result;
+      return result;
     },
     onStateChange: (state, previousState, context) => {
       const nextFilters = state.filters ?? [];
@@ -177,6 +190,14 @@ export function createFilteringPlugin<
 
       const validColumns = new Set(context.columns.map((column) => column.id));
       const normalizedFilters = nextFilters.filter((filter) => validColumns.has(filter.id));
+
+      const invalidFilters = nextFilters.filter((filter) => !validColumns.has(filter.id));
+      if (invalidFilters.length > 0 && process.env.NODE_ENV !== 'production') {
+        console.warn(
+          `[FilteringPlugin] Unknown column filters: ${invalidFilters.map(f => f.id).join(', ')}`,
+          'Valid columns:', Array.from(validColumns)
+        );
+      }
 
       if (normalizedFilters.length !== nextFilters.length) {
         context.setState((previous) => ({
@@ -207,7 +228,7 @@ export function createFilteringApi<
         const previousFilters = previous.filters ?? [];
         const nextFilters =
           typeof updater === 'function'
-            ? updater(previousFilters)
+            ? [...updater(previousFilters)]
             : updater;
 
         return {

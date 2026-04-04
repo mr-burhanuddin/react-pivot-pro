@@ -90,11 +90,41 @@ interface Column<TData extends RowData, TValue = unknown> extends Omit<ColumnDef
 
 declare function usePivotTable<TData extends RowData, TState extends TableState = TableState>(options: PivotTableOptions<TData, TState>): PivotTableInstance<TData, TState>;
 
+interface StateValidator<TState extends TableState = TableState> {
+    name: string;
+    validate: (state: Partial<TState>) => {
+        valid: boolean;
+        message?: string;
+    };
+}
 interface PivotTableStore<TState extends TableState> {
     state: TState;
     setState: (updater: Updater<TState>) => void;
     resetState: (nextState: TState) => void;
+    addValidator: (validator: StateValidator<TState>) => void;
+    removeValidator: (name: string) => void;
 }
 declare function createPivotTableStore<TState extends TableState>(initialState: TState): StoreApi<PivotTableStore<TState>>;
 
-export { type Column, type ColumnDef, type ColumnFilter, type PivotTableInstance, type PivotTableOptions, type PivotTablePlugin, type PivotTablePluginContext, type PivotTableStore, type Row, type RowData, type RowModel, type SortingRule, type TableState, type Updater, createDefaultTableState, createPivotTableStore, usePivotTable };
+interface PluginManifest {
+    name: string;
+    stateKeys: string[];
+    conflictsWith: string[];
+    description?: string;
+}
+interface PluginRegistry<TState extends TableState = TableState> {
+    register: (plugin: PivotTablePlugin<any, TState>, manifest: PluginManifest) => void;
+    unregister: (pluginName: string) => boolean;
+    getPlugin: (name: string) => PivotTablePlugin<any, TState> | undefined;
+    getManifest: (name: string) => PluginManifest | undefined;
+    getAll: () => PivotTablePlugin<any, TState>[];
+    getAllManifests: () => PluginManifest[];
+    hasConflict: (name: string) => {
+        hasConflict: boolean;
+        conflictsWith: string[];
+    };
+}
+declare function createPluginRegistry<TState extends TableState = TableState>(): PluginRegistry<TState>;
+declare const DEFAULT_MANIFESTS: Record<string, PluginManifest>;
+
+export { type Column, type ColumnDef, type ColumnFilter, DEFAULT_MANIFESTS, type PivotTableInstance, type PivotTableOptions, type PivotTablePlugin, type PivotTablePluginContext, type PivotTableStore, type PluginManifest, type PluginRegistry, type Row, type RowData, type RowModel, type SortingRule, type StateValidator, type TableState, type Updater, createDefaultTableState, createPivotTableStore, createPluginRegistry, usePivotTable };

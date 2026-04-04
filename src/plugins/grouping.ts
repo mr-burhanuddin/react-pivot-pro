@@ -79,8 +79,9 @@ function buildGroupedTree<TData extends RowData>(
   const columnId = grouping[depth];
   const grouped = new Map<string, { value: unknown; rows: Row<TData>[] }>();
 
-  for (const row of rows) {
-    const value = row.getValue(columnId);
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const value = row.values[columnId];
     const key = value == null ? '__null__' : String(value);
     const existing = grouped.get(key);
     if (existing) {
@@ -90,17 +91,20 @@ function buildGroupedTree<TData extends RowData>(
     }
   }
 
-  return Array.from(grouped.entries()).map(([groupKey, bucket]) => {
+  const result: GroupBuildNode<TData>[] = [];
+  for (const [groupKey, bucket] of grouped.entries()) {
     const path = parentPath ? `${parentPath}|${columnId}:${groupKey}` : `${columnId}:${groupKey}`;
-    return {
+    result.push({
       id: `group::${path}`,
       depth,
       key: groupKey,
       value: bucket.value,
       leafRows: bucket.rows,
       children: buildGroupedTree(bucket.rows, grouping, depth + 1, path),
-    };
-  });
+    });
+  }
+  
+  return result;
 }
 
 function flattenGroupedRows<TData extends RowData>(
@@ -110,17 +114,21 @@ function flattenGroupedRows<TData extends RowData>(
 ): Row<TData>[] {
   const output: Row<TData>[] = [];
 
-  const walk = (inputNodes: GroupBuildNode<TData>[]) => {
-    for (const node of inputNodes) {
+  function walk(inputNodes: GroupBuildNode<TData>[]): void {
+    for (let n = 0; n < inputNodes.length; n++) {
+      const node = inputNodes[n];
       const groupingColumn = grouping[node.depth];
-      const groupValues: Record<string, unknown> = {
-        ...node.leafRows[0]?.values,
-        __group: true,
-        __depth: node.depth,
-        __groupingColumnId: groupingColumn,
-        __groupingValue: node.value,
-        __rowCount: node.leafRows.length,
-      };
+      const firstRow = node.leafRows[0];
+      const groupValues: Record<string, unknown> = firstRow 
+        ? { ...firstRow.values }
+        : {};
+      
+      groupValues.__group = true;
+      groupValues.__depth = node.depth;
+      groupValues.__groupingColumnId = groupingColumn;
+      groupValues.__groupingValue = node.value;
+      groupValues.__rowCount = node.leafRows.length;
+      
       const groupRow: Row<TData> = {
         id: node.id,
         index: -1,
@@ -139,10 +147,12 @@ function flattenGroupedRows<TData extends RowData>(
       if (node.children.length > 0) {
         walk(node.children);
       } else {
-        output.push(...node.leafRows);
+        for (let r = 0; r < node.leafRows.length; r++) {
+          output.push(node.leafRows[r]);
+        }
       }
     }
-  };
+  }
 
   walk(nodes);
   return output;
@@ -152,10 +162,12 @@ export function createGroupingPlugin<
   TData extends RowData,
   TState extends GroupingTableState = GroupingTableState,
 >(): PivotTablePlugin<TData, TState> {
-  let lastRowsRef: Row<TData>[] | null = null;
-  let lastGroupingRef: string[] = [];
-  let lastExpandedRef: Record<string, boolean> = {};
-  let lastResultRef: Row<TData>[] | null = null;
+  const cache = {
+    rows: null as Row<TData>[] | null,
+    grouping: [] as string[],
+    expanded: {} as Record<string, boolean>,
+    result: null as Row<TData>[] | null,
+  };
 
   return {
     name: 'grouping',
@@ -170,19 +182,19 @@ export function createGroupingPlugin<
       const expandedGroups = context.state.expandedGroups ?? {};
 
       if (
-        lastRowsRef === rows &&
-        lastResultRef &&
-        areArraysEqual(rowGrouping, lastGroupingRef) &&
-        areExpandedMapsEqual(expandedGroups, lastExpandedRef)
+        cache.rows === rows &&
+        cache.result &&
+        areArraysEqual(rowGrouping, cache.grouping) &&
+        areExpandedMapsEqual(expandedGroups, cache.expanded)
       ) {
-        return lastResultRef;
+        return cache.result;
       }
 
       if (rowGrouping.length === 0) {
-        lastRowsRef = rows;
-        lastGroupingRef = rowGrouping.slice();
-        lastExpandedRef = { ...expandedGroups };
-        lastResultRef = rows;
+        cache.rows = rows;
+        cache.grouping = [];
+        cache.expanded = { ...expandedGroups };
+        cache.result = rows;
         return rows;
       }
 
@@ -190,20 +202,20 @@ export function createGroupingPlugin<
       const normalizedGrouping = rowGrouping.filter((columnId) => validColumnIds.has(columnId));
 
       if (normalizedGrouping.length === 0) {
-        lastRowsRef = rows;
-        lastGroupingRef = [];
-        lastExpandedRef = { ...expandedGroups };
-        lastResultRef = rows;
+        cache.rows = rows;
+        cache.grouping = [];
+        cache.expanded = { ...expandedGroups };
+        cache.result = rows;
         return rows;
       }
 
       const tree = buildGroupedTree(rows, normalizedGrouping);
       const groupedRows = flattenGroupedRows(tree, normalizedGrouping, expandedGroups);
 
-      lastRowsRef = rows;
-      lastGroupingRef = normalizedGrouping.slice();
-      lastExpandedRef = { ...expandedGroups };
-      lastResultRef = groupedRows;
+      cache.rows = rows;
+      cache.grouping = normalizedGrouping;
+      cache.expanded = { ...expandedGroups };
+      cache.result = groupedRows;
       return groupedRows;
     },
     onStateChange: (state, previousState, context) => {
@@ -246,14 +258,14 @@ export function createGroupingApi<
     setRowGrouping: (updater) => {
       table.setState((previous) => {
         const current = previous.rowGrouping ?? [];
-        const next = typeof updater === 'function' ? updater(current) : updater;
+        const next = typeof updater === 'function' ? [...updater(current)] : updater;
         return { ...previous, rowGrouping: next };
       });
     },
     setColumnGrouping: (updater) => {
       table.setState((previous) => {
         const current = previous.columnGrouping ?? [];
-        const next = typeof updater === 'function' ? updater(current) : updater;
+        const next = typeof updater === 'function' ? [...updater(current)] : updater;
         return { ...previous, columnGrouping: next };
       });
     },
