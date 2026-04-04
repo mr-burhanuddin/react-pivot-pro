@@ -72,6 +72,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
+    "postbuild": "node -e \"const fs=require('fs');const files=fs.readdirSync('dist',{recursive:true});files.forEach(f=>{if(f.endsWith('.d.cts')||f.match(/^column-.*\\.d\\.cts$/)||f.match(/^pivot-.*\\.d\\.cts$/)){const p=require('path').join('dist',f);try{fs.unlinkSync(p);console.log('Removed:',p);}catch(e){}}})\"",
     "dev": "tsup --watch",
     "build:types": "tsup --dts-only",
     "lint": "eslint .",

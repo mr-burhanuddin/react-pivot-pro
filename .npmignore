@@ -34,6 +34,8 @@ coverage/
 
 # Build artifacts (only dist is published)
 # dist/ is INCLUDED via "files" in package.json
+*.map
+*.tsbuildinfo
 
 # IDE
 .vscode/
