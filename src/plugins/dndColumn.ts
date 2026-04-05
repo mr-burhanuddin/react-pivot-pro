@@ -1,5 +1,6 @@
 import type { DragEndEvent, UniqueIdentifier } from '@dnd-kit/core';
-import type { PivotTableInstance, PivotTablePlugin, RowData, TableState } from '../types';
+import type { Column, PivotTableInstance, PivotTablePlugin, RowData, TableState } from '../types';
+import { unique, move, reorderByIds } from '../utils/helpers';
 
 export interface DndColumnState {
   columnOrder: string[];
@@ -26,31 +27,45 @@ export type PivotTableWithDndColumn<
   dndColumn: DndColumnApi<TData, TState>;
 };
 
-function unique(items: string[]): string[] {
-  return Array.from(new Set(items));
-}
-
-function move<T>(items: T[], fromIndex: number, toIndex: number): T[] {
-  if (fromIndex === toIndex) {
-    return items;
-  }
-
-  const next = [...items];
-  const [item] = next.splice(fromIndex, 1);
-  next.splice(toIndex, 0, item);
-  return next;
-}
-
 export function createDndColumnPlugin<
   TData extends RowData,
   TState extends DndColumnTableState = DndColumnTableState,
 >(): PivotTablePlugin<TData, TState> {
+  let lastColumnsRef: Column<TData>[] | null = null;
+  let lastOrderRef: string[] = [];
+  let lastResultRef: Column<TData>[] | null = null;
+
   return {
     name: 'dndColumn',
     getInitialState: (state) => ({
       ...state,
       columnOrder: unique(state.columnOrder ?? []),
     }),
+    transformColumns: (columns, context) => {
+      const columnOrder = unique((context.state as TState).columnOrder ?? []);
+
+      if (
+        lastColumnsRef === columns &&
+        lastResultRef &&
+        columnOrder.length === lastOrderRef.length &&
+        columnOrder.every((id, index) => id === lastOrderRef[index])
+      ) {
+        return lastResultRef;
+      }
+
+      if (columnOrder.length === 0) {
+        lastColumnsRef = columns;
+        lastOrderRef = [];
+        lastResultRef = columns;
+        return columns;
+      }
+
+      const reordered = reorderByIds(columns, columnOrder);
+      lastColumnsRef = columns;
+      lastOrderRef = columnOrder;
+      lastResultRef = reordered;
+      return reordered;
+    },
   };
 }
 
@@ -131,4 +146,9 @@ export function withDndColumn<
   });
 }
 
-export const useDndColumn = createDndColumnPlugin;
+export function useDndColumn<
+  TData extends RowData,
+  TState extends DndColumnTableState = DndColumnTableState,
+>(table: PivotTableInstance<TData, TState>): DndColumnApi<TData, TState> {
+  return createDndColumnApi(table);
+}

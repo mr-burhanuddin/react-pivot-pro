@@ -1,3 +1,4 @@
+import type { Column } from '../types/column';
 import type { PivotTableInstance, PivotTablePlugin, RowData, TableState } from '../types';
 
 export interface ColumnPinningPosition {
@@ -56,6 +57,33 @@ export function createColumnPinningPlugin<
       ...state,
       columnPinning: normalizePinning(state.columnPinning),
     }),
+    transformColumns: (columns, context) => {
+      const state = context.state as TState;
+      const pinning = normalizePinning(state.columnPinning);
+      
+      if (pinning.left.length === 0 && pinning.right.length === 0) {
+        return columns;
+      }
+      
+      const leftSet = new Set(pinning.left);
+      const rightSet = new Set(pinning.right);
+      
+      const leftColumns: Column<TData>[] = [];
+      const centerColumns: Column<TData>[] = [];
+      const rightColumns: Column<TData>[] = [];
+      
+      for (const col of columns) {
+        if (leftSet.has(col.id)) {
+          leftColumns.push({ ...col, meta: { ...col.meta, pinned: 'left' } as Column<TData>['meta'] });
+        } else if (rightSet.has(col.id)) {
+          rightColumns.push({ ...col, meta: { ...col.meta, pinned: 'right' } as Column<TData>['meta'] });
+        } else {
+          centerColumns.push(col);
+        }
+      }
+      
+      return [...leftColumns, ...centerColumns, ...rightColumns];
+    },
   };
 }
 

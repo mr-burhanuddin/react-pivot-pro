@@ -158,7 +158,12 @@ export function createSortingPlugin<
   };
 }
 
-export const useSorting = createSortingPlugin;
+export function useSorting<
+  TData extends RowData,
+  TState extends SortingTableState = SortingTableState,
+>(table: PivotTableInstance<TData, TState>): SortingApi<TData, TState> {
+  return createSortingApi(table);
+}
 
 export function createSortingApi<
   TData extends RowData,

@@ -1,18 +1,19 @@
-import { R as RowData, T as TableState, c as PivotTableOptions, a as PivotTableInstance } from './column-BnhUd1tF.js';
-export { d as Column, e as ColumnDef, C as ColumnFilter, P as PivotTablePlugin, f as PivotTablePluginContext, b as Row, g as RowModel, S as SortingRule, U as Updater, h as createDefaultTableState } from './column-BnhUd1tF.js';
-export { A as AggregationFn, a as AggregationInput, b as aggregationFns, c as createPivotEngineResult, d as createPivotPlugin, r as resolveAggregationFn, u as usePivot, w as withPivot } from './pivot-B-Fcws8h.js';
-export { DEFAULT_MANIFESTS, PivotTableStore, PluginManifest, PluginRegistry, StateValidator, createPivotTableStore, createPluginRegistry } from './store/index.js';
-export { useVirtualRows } from './hooks/index.js';
-import { VirtualizerOptions, Virtualizer, VirtualItem } from '@tanstack/virtual-core';
-export { createSortingPlugin, useSorting, withSorting } from './plugins/sorting.js';
-export { createFilteringPlugin, useFiltering, withFiltering } from './plugins/filtering.js';
-export { createGroupingPlugin, useGrouping, withGrouping } from './plugins/grouping.js';
-export { createColumnVisibilityPlugin, withColumnVisibility } from './plugins/columnVisibility.js';
-export { createColumnOrderingPlugin, withColumnOrdering } from './plugins/columnOrdering.js';
-export { createColumnPinningPlugin, withColumnPinning } from './plugins/columnPinning.js';
-export { createDndRowPlugin, useDndRow, withDndRow } from './plugins/dndRow.js';
-export { createDndColumnPlugin, useDndColumn, withDndColumn } from './plugins/dndColumn.js';
+import { R as RowData, T as TableState, c as PivotTableOptions, P as PivotTableInstance, a as PivotTablePlugin } from './column-BK8uBDec.js';
+export { d as Column, e as ColumnDef, C as ColumnFilter, f as PivotTablePluginContext, b as Row, g as RowMeta, h as RowModel, S as SortingRule, U as Updater, i as createDefaultTableState } from './column-BK8uBDec.js';
+export { DEFAULT_MANIFESTS, PivotTableStore, PluginManifest, PluginRegistry, createPivotTableStore, createPluginRegistry } from './store/index.js';
+export { A as AggregationInput, L as LegacyAggregationFn, P as PivotApi, a as PivotTableState, b as PivotTableWithPivot, c as createPivotPlugin, l as legacyAggregationFns, r as resolveAggregationFn, u as usePivot, w as withPivot } from './pivot-zWmmhXeB.js';
+export { useVirtualColumns, useVirtualRows } from './hooks/index.js';
+export { PivotTableWithSorting, SortingApi, SortingTableState, createSortingPlugin, useSorting, withSorting } from './plugins/sorting.js';
+export { FilteringApi, FilteringTableState, PivotTableWithFiltering, createFilteringPlugin, useFiltering, withFiltering } from './plugins/filtering.js';
+export { GroupingApi, GroupingTableState, PivotTableWithGrouping, createGroupingPlugin, useGrouping, withGrouping } from './plugins/grouping.js';
+export { ColumnVisibilityApi, ColumnVisibilityTableState, PivotTableWithColumnVisibility, createColumnVisibilityPlugin, withColumnVisibility } from './plugins/columnVisibility.js';
+export { ColumnOrderingApi, ColumnOrderingTableState, PivotTableWithColumnOrdering, createColumnOrderingPlugin, withColumnOrdering } from './plugins/columnOrdering.js';
+export { ColumnPinningApi, ColumnPinningTableState, PinSide, PivotTableWithColumnPinning, createColumnPinningPlugin, withColumnPinning } from './plugins/columnPinning.js';
+export { DndRowApi, DndRowTableState, PivotTableWithDndRow, createDndRowPlugin, useDndRow, withDndRow } from './plugins/dndRow.js';
+export { DndColumnApi, DndColumnTableState, PivotTableWithDndColumn, createDndColumnPlugin, useDndColumn, withDndColumn } from './plugins/dndColumn.js';
+import * as react_jsx_runtime from 'react/jsx-runtime';
 import 'zustand/vanilla';
+import '@tanstack/virtual-core';
 import '@dnd-kit/core';
 
 declare function usePivotTable<TData extends RowData, TState extends TableState = TableState>(options: PivotTableOptions<TData, TState>): PivotTableInstance<TData, TState>;
@@ -46,45 +47,65 @@ interface CopyToClipboardOptions {
     text: string;
     fallbackToExecCommand?: boolean;
 }
-interface FullscreenApi {
-    isSupported: () => boolean;
-    isFullscreen: () => boolean;
-    getElement: () => Element | null;
-    request: (element?: Element) => Promise<boolean>;
-    exit: () => Promise<boolean>;
-    toggle: (element?: Element) => Promise<boolean>;
-    onChange: (listener: (isFullscreen: boolean) => void) => () => void;
-}
 declare function copyToClipboard(options: CopyToClipboardOptions): Promise<boolean>;
-declare const fullscreen: FullscreenApi;
 
-type ScrollMode = 'element' | 'window';
-interface UseVirtualColumnsOptions<TScrollElement extends Element | Window = Element, TItemElement extends Element = Element> {
-    count: number;
-    getScrollElement: () => TScrollElement | null;
-    estimateSize: (index: number) => number;
-    scrollMode?: ScrollMode;
-    overscan?: number;
-    paddingStart?: number;
-    paddingEnd?: number;
-    scrollPaddingStart?: number;
-    scrollPaddingEnd?: number;
-    initialOffset?: number | (() => number);
-    enabled?: boolean;
-    debug?: boolean;
-    getItemKey?: VirtualizerOptions<TScrollElement, TItemElement>['getItemKey'];
-    rangeExtractor?: VirtualizerOptions<TScrollElement, TItemElement>['rangeExtractor'];
-    observeElementRect?: VirtualizerOptions<TScrollElement, TItemElement>['observeElementRect'];
-    observeElementOffset?: VirtualizerOptions<TScrollElement, TItemElement>['observeElementOffset'];
-    scrollToFn?: VirtualizerOptions<TScrollElement, TItemElement>['scrollToFn'];
-    measureElement?: VirtualizerOptions<TScrollElement, TItemElement>['measureElement'];
-    onChange?: (instance: Virtualizer<TScrollElement, TItemElement>, sync: boolean) => void;
+type AggregationFnName = 'sum' | 'count' | 'avg' | 'min' | 'max' | 'median' | 'stddev' | 'variance' | 'pctOfTotal' | 'runningTotal' | 'countDistinct';
+type AggregationFn<TValue = unknown> = (values: TValue[]) => number | null;
+interface AggregationState {
+    columnAggregators: Record<string, AggregationFnName | 'custom'>;
 }
-interface UseVirtualColumnsResult<TScrollElement extends Element | Window = Element, TItemElement extends Element = Element> {
-    virtualizer: Virtualizer<TScrollElement, TItemElement>;
-    virtualColumns: VirtualItem[];
-    totalSize: number;
+type AggregationTableState = TableState & AggregationState;
+interface AggregationApi<TData extends RowData, TState extends AggregationTableState = AggregationTableState> {
+    getColumnAggregator: (columnId: string) => AggregationFnName | 'custom' | undefined;
+    getColumnAggregators: () => Record<string, AggregationFnName | 'custom'>;
+    setColumnAggregator: (columnId: string, updater: AggregationFnName | 'custom' | ((previous: AggregationFnName | 'custom') => AggregationFnName | 'custom')) => void;
+    setColumnAggregators: (updater: Record<string, AggregationFnName | 'custom'> | ((previous: Record<string, AggregationFnName | 'custom'>) => Record<string, AggregationFnName | 'custom'>)) => void;
+    registerFn: (name: string, fn: AggregationFn) => void;
+    unregisterFn: (name: string) => void;
+    getRegisteredFns: () => Readonly<Record<string, AggregationFn>>;
+    resetColumnAggregators: () => void;
+    getAggregatedValue: (columnId: string) => number | null;
+    getGrandTotal: (columnId: string) => number | null;
 }
-declare function useVirtualColumns<TScrollElement extends Element | Window = Element, TItemElement extends Element = Element>(options: UseVirtualColumnsOptions<TScrollElement, TItemElement>): UseVirtualColumnsResult<TScrollElement, TItemElement>;
+type PivotTableWithAggregation<TData extends RowData, TState extends AggregationTableState = AggregationTableState> = PivotTableInstance<TData, TState> & {
+    aggregation: AggregationApi<TData, TState>;
+};
+interface AggregationPluginOptions {
+    defaultAggregator?: AggregationFnName;
+    autoAggregateColumns?: string[];
+    workerThreshold?: number;
+}
 
-export { PivotTableInstance, PivotTableOptions, RowData, TableState, copyToClipboard, exportCSV, fullscreen, serializeCSV, usePivotTable, useVirtualColumns };
+declare function createAggregationPlugin<TData extends RowData, TState extends AggregationTableState = AggregationTableState>(options?: AggregationPluginOptions): PivotTablePlugin<TData, TState>;
+
+declare function createAggregationApi<TData extends RowData, TState extends AggregationTableState = AggregationTableState>(table: PivotTableInstance<TData, TState>): AggregationApi<TData, TState>;
+declare function withAggregation<TData extends RowData, TState extends AggregationTableState = AggregationTableState>(table: PivotTableInstance<TData, TState>): PivotTableInstance<TData, TState> & {
+    aggregation: AggregationApi<TData, TState>;
+};
+declare function usePivotAggregation<TData extends RowData, TState extends AggregationTableState = AggregationTableState>(table: PivotTableInstance<TData, TState>): AggregationApi<TData, TState>;
+
+interface AggregatorDropdownProps {
+    columnId: string;
+    currentValue: AggregationFnName | 'custom' | undefined;
+    onChange: (columnId: string, fnName: AggregationFnName | 'custom') => void;
+    aggregators?: AggregationFnName[];
+    className?: string;
+}
+declare function AggregatorDropdown({ columnId, currentValue, onChange, aggregators, className, }: AggregatorDropdownProps): react_jsx_runtime.JSX.Element;
+
+declare const sum: AggregationFn;
+declare const count: AggregationFn;
+declare const avg: AggregationFn;
+declare const min: AggregationFn;
+declare const max: AggregationFn;
+declare const median: AggregationFn;
+declare const variance: AggregationFn;
+declare const stddev: AggregationFn;
+declare const pctOfTotal: AggregationFn;
+declare const runningTotal: AggregationFn;
+declare const countDistinct: AggregationFn;
+declare const aggregationFns: Record<AggregationFnName, AggregationFn>;
+declare const AGGREGATOR_LABELS: Record<AggregationFnName, string>;
+declare function resolveAggregationFn(name: AggregationFnName | 'custom', customFns: Record<string, AggregationFn>, columnId: string): AggregationFn | null;
+
+export { AGGREGATOR_LABELS, type AggregationApi, type AggregationFn, type AggregationFnName, type AggregationPluginOptions, type AggregationState, type AggregationTableState, AggregatorDropdown, type CopyToClipboardOptions, type ExportCsvOptions, type ExportCsvResult, PivotTableInstance, PivotTableOptions, PivotTablePlugin, type PivotTableWithAggregation, RowData, TableState, aggregationFns, avg, copyToClipboard, count, countDistinct, createAggregationApi, createAggregationPlugin, exportCSV, max, median, min, pctOfTotal, resolveAggregationFn as resolveAggregationFnPlugin, runningTotal, serializeCSV, stddev, sum, usePivotAggregation, usePivotTable, variance, withAggregation };

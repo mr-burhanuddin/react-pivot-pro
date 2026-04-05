@@ -8,7 +8,7 @@ import {
   type PivotServerAdapter,
   type PivotValueDef,
 } from '../core/pivotEngine';
-import type { AggregationFn } from '../utils/aggregationFns';
+import type { LegacyAggregationFn as AggregationFn } from '../utils/aggregationFns';
 
 export interface PivotTableState extends TableState {
   rowGrouping: string[];
@@ -267,4 +267,9 @@ export function withPivot<
   });
 }
 
-export const usePivot = createPivotPlugin;
+export function usePivot<
+  TData extends RowData,
+  TState extends PivotTableState = PivotTableState,
+>(table: PivotTableInstance<TData, TState>): PivotApi<TData, TState> {
+  return createPivotApi(table);
+}

@@ -10,7 +10,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir, 'src'),
-      '@pivot': path.resolve(rootDir, '../src'),
+      '@pivot': path.resolve(rootDir, '../src/index.ts'),
+      '@pivot/': path.resolve(rootDir, '../src/'),
     },
     dedupe: ['react', 'react-dom'],
   },
@@ -21,10 +22,5 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react-pivot-pro'],
-  },
-  build: {
-    rollupOptions: {
-      external: ['react-pivot-pro'],
-    },
   },
 });

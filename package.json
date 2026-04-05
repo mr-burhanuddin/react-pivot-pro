@@ -4,6 +4,10 @@
   "description": "Headless, plugin-driven pivot table engine for React + TypeScript",
   "keywords": [
     "react",
+    "react-pivot-table",
+    "react-pivot",
+    "pivot-table",
+    "pivottable",
     "table",
     "pivot",
     "grid",

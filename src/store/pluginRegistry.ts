@@ -1,4 +1,4 @@
-import type { PivotTablePlugin, TableState, Updater } from '../types';
+import type { PivotTablePlugin, TableState } from '../types';
 
 export interface PluginManifest {
   name: string;

@@ -303,4 +303,9 @@ export function withGrouping<
   });
 }
 
-export const useGrouping = createGroupingPlugin;
+export function useGrouping<
+  TData extends RowData,
+  TState extends GroupingTableState = GroupingTableState,
+>(table: PivotTableInstance<TData, TState>): GroupingApi<TData, TState> {
+  return createGroupingApi(table);
+}

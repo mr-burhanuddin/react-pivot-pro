@@ -1,0 +1,90 @@
+/* ── motion ── */
+
+/* Row expand/collapse */
+.pivot-row-children {
+  overflow: hidden;
+  transition: height 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pivot-expand-icon {
+  transition: transform 200ms ease;
+}
+.pivot-expand-icon.open {
+  transform: rotate(90deg);
+}
+
+/* Sort icon state transitions */
+.sort-icon {
+  opacity: 0;
+  transition: opacity 150ms, transform 150ms;
+}
+[data-sorted] .sort-icon {
+  opacity: 1;
+}
+[data-sort="desc"] .sort-icon {
+  transform: rotate(180deg);
+}
+
+/* Row hover — background only, no transform */
+.pivot-row {
+  transition: background-color var(--table-row-hover-duration) ease;
+}
+
+/* Staggered section entrance */
+.demo-section {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadeUp 400ms ease forwards;
+}
+@keyframes fadeUp {
+  to { opacity: 1; transform: none; }
+}
+.demo-section:nth-child(1) { animation-delay: 0ms; }
+.demo-section:nth-child(2) { animation-delay: 60ms; }
+.demo-section:nth-child(3) { animation-delay: 120ms; }
+
+/* Field panel open/close */
+.field-panel {
+  transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms ease;
+}
+.field-panel.closed {
+  transform: translateX(-8px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Aggregator label crossfade */
+.agg-label {
+  transition: opacity 120ms ease;
+}
+.agg-label.switching {
+  opacity: 0;
+}
+
+/* Density row height morph */
+.pivot-row {
+  transition: height 150ms ease;
+}
+
+/* Custom focus ring — remove browser default */
+*:focus-visible {
+  outline: 2px solid var(--accent-600);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Copy button success flash */
+.copy-btn.copied {
+  color: var(--text-success);
+  transition: color 200ms;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

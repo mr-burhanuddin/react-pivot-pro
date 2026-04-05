@@ -12,7 +12,7 @@ export default defineConfig({
     'plugins/columnPinning': 'src/plugins/columnPinning.ts',
     'plugins/dndRow': 'src/plugins/dndRow.ts',
     'plugins/dndColumn': 'src/plugins/dndColumn.ts',
-    'hooks/index': 'src/hooks/useVirtualRows.ts',
+    'hooks/index': 'src/hooks/index.ts',
     'store/index': 'src/store/index.ts',
   },
   format: ['esm', 'cjs'],

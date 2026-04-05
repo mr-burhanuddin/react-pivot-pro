@@ -209,7 +209,12 @@ export function createFilteringPlugin<
   };
 }
 
-export const useFiltering = createFilteringPlugin;
+export function useFiltering<
+  TData extends RowData,
+  TState extends FilteringTableState = FilteringTableState,
+>(table: PivotTableInstance<TData, TState>): FilteringApi<TData, TState> {
+  return createFilteringApi(table);
+}
 
 export function createFilteringApi<
   TData extends RowData,

@@ -24,6 +24,10 @@ export interface PivotTablePlugin<
     rows: Row<TData>[],
     context: PivotTablePluginContext<TData, TState>,
   ) => Row<TData>[];
+  transformColumns?: (
+    columns: Column<TData>[],
+    context: PivotTablePluginContext<TData, TState>,
+  ) => Column<TData>[];
   onStateChange?: (
     state: TState,
     previousState: TState,

@@ -1,3 +1,4 @@
+import type { Column } from '../types/column';
 import type { PivotTableInstance, PivotTablePlugin, RowData, TableState } from '../types';
 
 export interface ColumnOrderingState {
@@ -38,6 +39,38 @@ export function createColumnOrderingPlugin<
       ...state,
       columnOrder: unique(state.columnOrder ?? []),
     }),
+    transformColumns: (columns, context) => {
+      const state = context.state as TState;
+      const columnOrder = unique(state.columnOrder ?? []);
+      
+      if (columnOrder.length === 0) {
+        return columns;
+      }
+      
+      const columnMap = new Map<string, Column<TData>>();
+      for (const col of columns) {
+        columnMap.set(col.id, col);
+      }
+      
+      const orderedColumns: Column<TData>[] = [];
+      const remaining: Column<TData>[] = [];
+      
+      for (const id of columnOrder) {
+        const col = columnMap.get(id);
+        if (col) {
+          orderedColumns.push(col);
+          columnMap.delete(id);
+        }
+      }
+      
+      for (const col of columns) {
+        if (columnMap.has(col.id)) {
+          remaining.push(col);
+        }
+      }
+      
+      return [...orderedColumns, ...remaining];
+    },
   };
 }
 

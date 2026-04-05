@@ -12,7 +12,6 @@ import 'prismjs/components/prism-jsx';
 import 'prismjs/components/prism-tsx';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-json';
-import 'prismjs/themes/prism.css';
 import './styles/global.css';
 import { App } from './App';
 import { AppErrorBoundary } from './components/AppErrorBoundary';

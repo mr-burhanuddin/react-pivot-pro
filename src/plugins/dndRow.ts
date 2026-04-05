@@ -1,5 +1,6 @@
 import type { DragEndEvent, UniqueIdentifier } from '@dnd-kit/core';
 import type { PivotTableInstance, PivotTablePlugin, Row, RowData, TableState } from '../types';
+import { unique, move, reorderByIds } from '../utils/helpers';
 
 export interface DndRowState {
   rowOrder: string[];
@@ -26,52 +27,6 @@ export type PivotTableWithDndRow<
   dndRow: DndRowApi<TData, TState>;
 };
 
-function unique(items: string[]): string[] {
-  return Array.from(new Set(items));
-}
-
-function move<T>(items: T[], fromIndex: number, toIndex: number): T[] {
-  if (fromIndex === toIndex) {
-    return items;
-  }
-
-  const next = [...items];
-  const [item] = next.splice(fromIndex, 1);
-  next.splice(toIndex, 0, item);
-  return next;
-}
-
-function reorderRowsByOrder<TData extends RowData>(
-  rows: Row<TData>[],
-  rowOrder: string[],
-): Row<TData>[] {
-  if (rowOrder.length === 0) {
-    return rows;
-  }
-
-  const rank = new Map<string, number>();
-  rowOrder.forEach((id, index) => {
-    rank.set(id, index);
-  });
-
-  const sorted = [...rows].sort((left, right) => {
-    const leftRank = rank.get(left.id);
-    const rightRank = rank.get(right.id);
-    if (leftRank == null && rightRank == null) {
-      return 0;
-    }
-    if (leftRank == null) {
-      return 1;
-    }
-    if (rightRank == null) {
-      return -1;
-    }
-    return leftRank - rightRank;
-  });
-
-  return sorted;
-}
-
 export function createDndRowPlugin<
   TData extends RowData,
   TState extends DndRowTableState = DndRowTableState,
@@ -87,7 +42,7 @@ export function createDndRowPlugin<
       rowOrder: unique(state.rowOrder ?? []),
     }),
     transformRows: (rows, context) => {
-      const rowOrder = unique(context.state.rowOrder ?? []);
+      const rowOrder = unique((context.state as TState).rowOrder ?? []);
 
       if (
         lastRowsRef === rows &&
@@ -105,7 +60,7 @@ export function createDndRowPlugin<
         return rows;
       }
 
-      const reordered = reorderRowsByOrder(rows, rowOrder);
+      const reordered = reorderByIds(rows, rowOrder);
       lastRowsRef = rows;
       lastOrderRef = rowOrder;
       lastResultRef = reordered;
@@ -191,4 +146,9 @@ export function withDndRow<
   });
 }
 
-export const useDndRow = createDndRowPlugin;
+export function useDndRow<
+  TData extends RowData,
+  TState extends DndRowTableState = DndRowTableState,
+>(table: PivotTableInstance<TData, TState>): DndRowApi<TData, TState> {
+  return createDndRowApi(table);
+}

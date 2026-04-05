@@ -15,36 +15,12 @@ import type {
   Updater,
 } from '../types';
 import { createDefaultTableState } from '../types';
+import { isSafeKey, getValueByAccessorKey } from '../utils/accessorHelpers';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-const DANGEROUS_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
-const DANGEROUS_KEY_PATTERN = /^__|constructor|prototype$/;
 const MAX_COLUMN_ID_LENGTH = 128;
 const VALID_ID_PATTERN = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
-
-function isSafeKey(key: string): boolean {
-  return !DANGEROUS_KEYS.has(key) && !DANGEROUS_KEY_PATTERN.test(key);
-}
-
-function getValueByAccessorKey<TData extends RowData>(
-  row: TData,
-  accessorKey: string
-): unknown {
-  const keys = accessorKey.split('.');
-  let value: unknown = row;
-  for (const key of keys) {
-    if (value == null || typeof value !== 'object') {
-      return undefined;
-    }
-    const obj = value as Record<string, unknown>;
-    if (!isSafeKey(key)) {
-      return undefined;
-    }
-    value = obj[key];
-  }
-  return value;
-}
 
 function validateAndNormalizeColumnId(id: unknown, index: number): string {
   if (typeof id !== 'string' || id.length === 0) {
@@ -105,9 +81,11 @@ function mergeStates<TState extends TableState>(
   return { ...internalState, ...controlledState };
 }
 
-interface CacheEntry<T> {
-  key: string;
-  value: T;
+interface PluginCacheEntry<TData extends RowData> {
+  inputRows: Row<TData>[] | null;
+  result: Row<TData>[] | null;
+  inputColumns: Column<TData>[] | null;
+  columnsResult: Column<TData>[] | null;
 }
 
 function buildCoreRowModel<TData extends RowData>(
@@ -176,8 +154,7 @@ function useDeepCompareMemo<T>(factory: () => T, deps: unknown[]): T {
     if (d === null) return 'null';
     if (d === undefined) return 'undefined';
     if (typeof d === 'object') return JSON.stringify(d);
-    if (typeof d === 'function') return d.toString();
-    return d;
+    return String(d);
   });
   
   const depsChanged = !ref.current || 
@@ -220,7 +197,7 @@ export function usePivotTable<
   );
 
   const pluginContextRef = useRef<PivotTablePluginContext<TData, TState> | null>(null);
-  const pluginCacheRef = useRef<Map<string, { rows: Row<TData>[]; result: Row<TData>[] }>>(new Map());
+  const pluginCacheRef = useRef<Map<string, PluginCacheEntry<TData>>>(new Map());
 
   const initialStateRef = useRef<TState | null>(null);
   if (!initialStateRef.current) {
@@ -388,15 +365,15 @@ export function usePivotTable<
       const cacheKey = `plugin_${plugin.name}_v${pluginVersion}`;
       const cached = pluginCacheRef.current.get(cacheKey);
       
-      if (cached && cached.rows === transformedRows) {
-        transformedRows = cached.result;
+      if (cached && cached.inputRows === transformedRows) {
+        transformedRows = cached.result!;
         continue;
       }
       
       transformedRows = plugin.transformRows(transformedRows, context);
       rowsChanged = true;
       
-      pluginCacheRef.current.set(cacheKey, { rows: transformedRows, result: transformedRows });
+      pluginCacheRef.current.set(cacheKey, { inputRows: transformedRows, result: transformedRows, inputColumns: null, columnsResult: null });
     }
 
     if (!rowsChanged) {
@@ -416,10 +393,41 @@ export function usePivotTable<
     };
   }, [coreRowModel.rows, pluginVersion, dataVersion, stateVersion]);
 
+  const columnModel = useDeepCompareMemo((): Column<TData>[] => {
+    const context = pluginContextRef.current;
+    if (!context) {
+      return columns;
+    }
+
+    const plugins = Array.from(pluginsRef.current.values());
+
+    let transformedColumns: Column<TData>[] = columns;
+    let columnsChanged = false;
+
+    for (const plugin of plugins) {
+      if (!plugin.transformColumns) continue;
+
+      const cacheKey = `plugin_${plugin.name}_columns_v${pluginVersion}`;
+      const cached = pluginCacheRef.current.get(cacheKey);
+
+      if (cached && cached.inputColumns === transformedColumns) {
+        transformedColumns = cached.columnsResult!;
+        continue;
+      }
+
+      transformedColumns = plugin.transformColumns(transformedColumns, context);
+      columnsChanged = true;
+
+      pluginCacheRef.current.set(cacheKey, { inputRows: null, result: null, inputColumns: transformedColumns, columnsResult: transformedColumns });
+    }
+
+    return columnsChanged ? transformedColumns : columns;
+  }, [columns, pluginVersion, stateVersion]);
+
   return {
     state,
     setState: stableSetState,
-    columns,
+    columns: columnModel,
     rowModel,
     getState: () => state,
     getCoreRowModel: () => coreRowModel,

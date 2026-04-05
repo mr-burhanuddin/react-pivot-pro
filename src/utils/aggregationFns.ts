@@ -1,6 +1,6 @@
 import type { RowData } from '../types';
 
-export type AggregationFn<TData extends RowData = RowData> = (
+export type LegacyAggregationFn<TData extends RowData = RowData> = (
   values: unknown[],
   rows: TData[],
 ) => unknown;
@@ -20,7 +20,7 @@ function toFiniteNumbers(values: unknown[]): number[] {
     .filter((value): value is number => value !== null);
 }
 
-export const aggregationFns: Record<string, AggregationFn> = {
+export const legacyAggregationFns: Record<string, LegacyAggregationFn> = {
   count: (values) => values.length,
   sum: (values) => {
     const numbers = toFiniteNumbers(values);
@@ -38,14 +38,14 @@ export const aggregationFns: Record<string, AggregationFn> = {
     if (numbers.length === 0) {
       return undefined;
     }
-    return numbers.reduce((min, val) => val < min ? val : min, numbers[0]);
+    return numbers.reduce((min, val) => (val < min ? val : min), numbers[0]);
   },
   max: (values) => {
     const numbers = toFiniteNumbers(values);
     if (numbers.length === 0) {
       return undefined;
     }
-    return numbers.reduce((max, val) => val > max ? val : max, numbers[0]);
+    return numbers.reduce((max, val) => (val > max ? val : max), numbers[0]);
   },
   median: (values) => {
     const numbers = toFiniteNumbers(values).sort((a, b) => a - b);
@@ -74,15 +74,15 @@ export const aggregationFns: Record<string, AggregationFn> = {
 };
 
 export type AggregationInput<TData extends RowData = RowData> =
-  | keyof typeof aggregationFns
-  | AggregationFn<TData>;
+  | keyof typeof legacyAggregationFns
+  | LegacyAggregationFn<TData>;
 
 export function resolveAggregationFn<TData extends RowData = RowData>(
   input: AggregationInput<TData> | undefined,
-  customAggregationFns?: Record<string, AggregationFn<TData>>,
-): AggregationFn<TData> {
+  customAggregationFns?: Record<string, LegacyAggregationFn<TData>>,
+): LegacyAggregationFn<TData> {
   if (!input) {
-    return aggregationFns.sum as AggregationFn<TData>;
+    return legacyAggregationFns.sum as LegacyAggregationFn<TData>;
   }
 
   if (typeof input === 'function') {
@@ -93,9 +93,9 @@ export function resolveAggregationFn<TData extends RowData = RowData>(
     return customAggregationFns[input];
   }
 
-  if (input in aggregationFns) {
-    return aggregationFns[input] as AggregationFn<TData>;
+  if (input in legacyAggregationFns) {
+    return legacyAggregationFns[input] as LegacyAggregationFn<TData>;
   }
 
-  return aggregationFns.sum as AggregationFn<TData>;
+  return legacyAggregationFns.sum as LegacyAggregationFn<TData>;
 }

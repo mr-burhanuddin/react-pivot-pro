@@ -8,7 +8,7 @@ export interface ColumnDef<TData extends RowData, TValue = unknown> {
   meta?: Record<string, unknown>;
   enableSorting?: boolean;
   enableFiltering?: boolean;
-  cell?: (val: any, row: any) => React.ReactNode;
+  cell?: (val: TValue, row: TData) => React.ReactNode;
   width?: number;
   pivot?: { aggregator: 'sum' | 'count' | 'avg' | 'min' | 'max' };
 }
