@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useCallback, type ReactElement } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import DocsLayout from './layouts/DocsLayout';
 import LandingLayout from './layouts/LandingLayout';
 import { ALL_ROUTES } from './config/nav';
@@ -84,15 +85,21 @@ export function App() {
 
   if (isLanding) {
     return (
-      <LandingLayout onNavigate={navigate}>
-        <LandingPage onNavigate={navigate} />
-      </LandingLayout>
+      <>
+        <Analytics />
+        <LandingLayout onNavigate={navigate}>
+          <LandingPage onNavigate={navigate} />
+        </LandingLayout>
+      </>
     );
   }
 
   return (
-    <DocsLayout currentPath={path} onNavigate={navigate}>
-      {content}
-    </DocsLayout>
+    <>
+      <Analytics />
+      <DocsLayout currentPath={path} onNavigate={navigate}>
+        {content}
+      </DocsLayout>
+    </>
   );
 }
