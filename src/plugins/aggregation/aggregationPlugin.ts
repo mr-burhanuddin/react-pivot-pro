@@ -9,7 +9,6 @@ import type {
   AggregationTableState,
 } from '../../types/aggregation';
 import {
-  aggregationFns,
   resolveAggregationFn,
 } from './aggregators';
 

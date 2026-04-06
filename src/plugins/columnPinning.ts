@@ -1,5 +1,6 @@
 import type { Column } from '../types/column';
 import type { PivotTableInstance, PivotTablePlugin, RowData, TableState } from '../types';
+import { unique } from '../utils/helpers';
 
 export interface ColumnPinningPosition {
   left: string[];
@@ -36,10 +37,6 @@ export type PivotTableWithColumnPinning<
 > = PivotTableInstance<TData, TState> & {
   columnPinning: ColumnPinningApi<TData, TState>;
 };
-
-function unique(items: string[]): string[] {
-  return Array.from(new Set(items));
-}
 
 function normalizePinning(value?: ColumnPinningPosition): ColumnPinningPosition {
   const left = unique(value?.left ?? []);

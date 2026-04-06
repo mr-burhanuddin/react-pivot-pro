@@ -15,7 +15,7 @@ import type {
   Updater,
 } from '../types';
 import { createDefaultTableState } from '../types';
-import { isSafeKey, getValueByAccessorKey } from '../utils/accessorHelpers';
+import { getValueByAccessorKey } from '../utils/accessorHelpers';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 

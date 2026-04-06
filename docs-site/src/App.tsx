@@ -67,11 +67,6 @@ export function App() {
     window.location.hash = newPath;
   }, []);
 
-  const currentRoute = useMemo(
-    () => ALL_ROUTES.find((r) => r.path === path),
-    [path],
-  );
-
   const isLanding = path === '/';
   const PageComponent = PAGE_MODULES[path];
 

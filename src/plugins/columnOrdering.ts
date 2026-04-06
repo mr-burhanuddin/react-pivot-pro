@@ -1,5 +1,6 @@
 import type { Column } from '../types/column';
 import type { PivotTableInstance, PivotTablePlugin, RowData, TableState } from '../types';
+import { unique } from '../utils/helpers';
 
 export interface ColumnOrderingState {
   columnOrder: string[];
@@ -24,10 +25,6 @@ export type PivotTableWithColumnOrdering<
 > = PivotTableInstance<TData, TState> & {
   columnOrdering: ColumnOrderingApi<TData, TState>;
 };
-
-function unique(items: string[]): string[] {
-  return Array.from(new Set(items));
-}
 
 export function createColumnOrderingPlugin<
   TData extends RowData,

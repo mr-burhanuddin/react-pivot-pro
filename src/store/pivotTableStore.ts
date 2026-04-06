@@ -1,6 +1,5 @@
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { TableState, Updater } from '../types';
-import { createDefaultTableState } from '../types';
 
 export interface PivotTableStore<TState extends TableState> {
   state: TState;

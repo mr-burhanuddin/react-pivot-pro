@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import type { SalesRow } from '../data/mockData';
 import { mockData } from '../data/mockData';
 import {
@@ -321,6 +321,147 @@ tableWithFilter.filtering.setGlobalFilter('search term');`;
           {rows.slice(0, 8).map((row, i) => (
             <tr key={row.id} style={{ background: i % 2 === 0 ? 'var(--table-row-odd)' : 'var(--table-row-even)' }}>
               {table.columns.slice(0, 5).map(col => <Td key={col.id}>{String(row.values[col.id ?? ''] ?? '—')}</Td>)}
+            </tr>
+          ))}
+        </tbody>
+      </MiniTable>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)', marginTop: 'var(--space-2)' }}>
+        Showing {filteredCount} of {SUBSET.length} rows
+      </div>
+      <CodeBlock code={code} language="tsx" />
+    </>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   TYPED FILTER DEMOS
+   ═══════════════════════════════════════════ */
+type FilterMode = 'text' | 'number' | 'enum';
+
+function TypedFilterDemo() {
+  const [mode, setMode] = useState<FilterMode>('number');
+  const [textValue, setTextValue] = useState('');
+  const [numValue, setNumValue] = useState<string>('');
+  const [numOp, setNumOp] = useState<'gt' | 'lt' | 'between'>('gt');
+  const [numValue2, setNumValue2] = useState<string>('');
+  const [enumValue, setEnumValue] = useState<string[]>([]);
+
+  const tableBase = usePivotTable<SalesRow, FilteringTableState>({
+    data: useMemo(() => SUBSET, []),
+    columns: useMemo(() => COLUMNS.slice(0, 6), []),
+    plugins: useMemo(() => [createFilteringPlugin()], []),
+  });
+  const filteringApi = useFiltering(tableBase);
+
+  const prevFilterRef = useRef<string>('');
+  const currentFilter = `${mode}:${textValue}:${numValue}:${numOp}:${numValue2}:${enumValue.join(',')}`;
+
+  if (prevFilterRef.current !== currentFilter) {
+    prevFilterRef.current = currentFilter;
+    if (mode === 'text' && textValue) {
+      filteringApi.setTextFilter('country', 'contains', textValue);
+    } else if (mode === 'number' && numValue) {
+      const num = parseFloat(numValue);
+      const num2 = numValue2 ? parseFloat(numValue2) : undefined;
+      if (!isNaN(num)) {
+        filteringApi.setNumberFilter('units', numOp, num, num2);
+      }
+    } else if (mode === 'enum' && enumValue.length > 0) {
+      filteringApi.setEnumFilter('region', 'in', enumValue);
+    } else {
+      filteringApi.setColumnFilters([]);
+    }
+  }
+
+  const rows = tableBase.getRowModel().rows;
+  const filteredCount = rows.length;
+
+  const code = `// Text filter
+table.filtering.setTextFilter('country', 'contains', '${textValue}');
+
+// Number filter
+table.filtering.setNumberFilter('units', '${numOp}', ${numValue}${numValue2 ? `, ${numValue2}` : ''});
+
+// Enum filter
+table.filtering.setEnumFilter('region', 'in', ${JSON.stringify(enumValue)});`;
+
+  return (
+    <>
+      <div style={{ marginBottom: 'var(--space-3)', display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Filter type:</span>
+        {(['text', 'number', 'enum'] as FilterMode[]).map(m => (
+          <Chip key={m} active={mode === m} onClick={() => setMode(m)}>
+            {m}
+          </Chip>
+        ))}
+      </div>
+
+      {mode === 'text' && (
+        <div style={{ marginBottom: 'var(--space-3)', position: 'relative', maxWidth: 240 }}>
+          <Search size={14} style={{ position: 'absolute', left: 8, top: 7, color: 'var(--text-tertiary)' }} />
+          <input
+            value={textValue}
+            onChange={e => setTextValue(e.target.value)}
+            placeholder="Contains text..."
+            style={{ paddingLeft: 28, width: '100%', padding: '5px 8px 5px 28px', border: 'var(--border-width-default) solid var(--border-default)', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)', background: 'var(--surface-1)', color: 'var(--text-primary)' }}
+          />
+        </div>
+      )}
+
+      {mode === 'number' && (
+        <div style={{ marginBottom: 'var(--space-3)', display: 'flex', gap: 'var(--space-2)', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)' }}>Units</span>
+          <select value={numOp} onChange={e => setNumOp(e.target.value as typeof numOp)} style={{ padding: '4px 8px', border: 'var(--border-width-default) solid var(--border-default)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', background: 'var(--surface-1)' }}>
+            <option value="gt">&gt;</option>
+            <option value="lt">&lt;</option>
+            <option value="between">between</option>
+          </select>
+          <input
+            type="number"
+            value={numValue}
+            onChange={e => setNumValue(e.target.value)}
+            placeholder="Value"
+            style={{ width: 80, padding: '4px 8px', border: 'var(--border-width-default) solid var(--border-default)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', background: 'var(--surface-1)' }}
+          />
+          {numOp === 'between' && (
+            <>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>and</span>
+              <input
+                type="number"
+                value={numValue2}
+                onChange={e => setNumValue2(e.target.value)}
+                placeholder="Value 2"
+                style={{ width: 80, padding: '4px 8px', border: 'var(--border-width-default) solid var(--border-default)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', background: 'var(--surface-1)' }}
+              />
+            </>
+          )}
+        </div>
+      )}
+
+      {mode === 'enum' && (
+        <div style={{ marginBottom: 'var(--space-3)', display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+          {['North', 'South', 'East', 'West'].map(region => (
+            <Chip
+              key={region}
+              active={enumValue.includes(region)}
+              onClick={() => setEnumValue(prev => prev.includes(region) ? prev.filter(r => r !== region) : [...prev, region])}
+            >
+              {region}
+            </Chip>
+          ))}
+        </div>
+      )}
+
+      <MiniTable>
+        <thead>
+          <tr>
+            {tableBase.columns.slice(0, 5).map(col => <Th key={col.id}>{col.header}</Th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.slice(0, 6).map((row, i) => (
+            <tr key={row.id} style={{ background: i % 2 === 0 ? 'var(--table-row-odd)' : 'var(--table-row-even)' }}>
+              {tableBase.columns.slice(0, 5).map(col => <Td key={col.id}>{String(row.values[col.id ?? ''] ?? '—')}</Td>)}
             </tr>
           ))}
         </tbody>
@@ -1320,6 +1461,17 @@ const table = usePivotTable({ data, columns, plugins: [createFilteringPlugin()] 
 const tableWithFilter = withFiltering(table);
 tableWithFilter.filtering.setGlobalFilter('search term');`}>
         <FilteringDemo />
+      </DemoCard>
+
+      <DemoCard title="Typed Filters" badge="Plugin" description="Text, number, and enum filters with specific operators." icon={<Filter size={16} />} code={`// Text filter
+table.filtering.setTextFilter('country', 'contains', 'United');
+
+// Number filter
+table.filtering.setNumberFilter('units', 'gt', 100);
+
+// Enum filter
+table.filtering.setEnumFilter('region', 'in', ['North', 'South']);`}>
+        <TypedFilterDemo />
       </DemoCard>
 
       <DemoCard title="Row Grouping" badge="Plugin" description="Hierarchical row grouping with expand/collapse toggle." icon={<Layers size={16} />} code={`import { usePivotTable, createGroupingPlugin, withGrouping } from 'react-pivot-pro';

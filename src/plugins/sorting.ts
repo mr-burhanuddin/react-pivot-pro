@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type {
   PivotTableInstance,
   PivotTablePlugin,
@@ -34,6 +35,17 @@ export type PivotTableWithSorting<
 
 export interface SortingPluginOptions {
   isMultiSortEvent?: (multi: boolean | undefined) => boolean;
+  defaultMultiSort?: boolean;
+}
+
+function defaultIsMultiSortEvent(
+  multi: boolean | undefined,
+  defaultMultiSort?: boolean,
+): boolean {
+  if (multi !== undefined) {
+    return Boolean(multi);
+  }
+  return Boolean(defaultMultiSort);
 }
 
 function areSortingRulesEqual(next: SortingRule[], previous: SortingRule[]): boolean {
@@ -74,9 +86,7 @@ function comparePrimitives(left: unknown, right: unknown): number {
 export function createSortingPlugin<
   TData extends RowData,
   TState extends SortingTableState = SortingTableState,
->(options: SortingPluginOptions = {}): PivotTablePlugin<TData, TState> {
-  const isMultiSortEvent = options.isMultiSortEvent ?? ((multi) => Boolean(multi));
-  
+>(): PivotTablePlugin<TData, TState> {
   const cache = {
     rows: null as Row<TData>[] | null,
     sorting: [] as SortingRule[],
@@ -161,8 +171,11 @@ export function createSortingPlugin<
 export function useSorting<
   TData extends RowData,
   TState extends SortingTableState = SortingTableState,
->(table: PivotTableInstance<TData, TState>): SortingApi<TData, TState> {
-  return createSortingApi(table);
+>(
+  table: PivotTableInstance<TData, TState>,
+  options: SortingPluginOptions = {},
+): SortingApi<TData, TState> {
+  return useMemo(() => createSortingApi(table, options), [table, options]);
 }
 
 export function createSortingApi<
@@ -172,7 +185,10 @@ export function createSortingApi<
   table: PivotTableInstance<TData, TState>,
   options: SortingPluginOptions = {},
 ): SortingApi<TData, TState> {
-  const isMultiSortEvent = options.isMultiSortEvent ?? ((multi) => Boolean(multi));
+  const isMultiSortEvent = (multi: boolean | undefined) =>
+    options.isMultiSortEvent
+      ? options.isMultiSortEvent(multi)
+      : defaultIsMultiSortEvent(multi, options.defaultMultiSort);
 
   let lastSortingRef: SortingRule[] | null = null;
   let lastSortedColumnIdsRef: string[] = [];
