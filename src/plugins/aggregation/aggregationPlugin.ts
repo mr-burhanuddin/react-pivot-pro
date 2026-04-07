@@ -1,17 +1,14 @@
-import type { Column } from '../../types/column';
-import type { PivotTablePlugin } from '../../types/plugin';
-import type { Row, RowMeta } from '../../types/row';
-import type { RowData } from '../../types/table';
+import type { Column } from "../../types/column";
+import type { PivotTablePlugin } from "../../types/plugin";
+import type { Row, RowMeta } from "../../types/row";
+import type { RowData } from "../../types/table";
 import type {
   AggregationFn,
   AggregationFnName,
   AggregationPluginOptions,
   AggregationTableState,
-} from '../../types/aggregation';
-import {
-  aggregationFns,
-  resolveAggregationFn,
-} from './aggregators';
+} from "../../types/aggregation";
+import { resolveAggregationFn } from "./aggregators";
 
 interface CacheEntry<TData extends RowData> {
   rows: Row<TData>[] | null;
@@ -20,14 +17,14 @@ interface CacheEntry<TData extends RowData> {
 }
 
 function serializeColumnAggregators(
-  aggregators: Record<string, AggregationFnName | 'custom'>,
+  aggregators: Record<string, AggregationFnName | "custom">,
 ): string {
   return JSON.stringify(aggregators);
 }
 
 function computeGrandTotals<TData extends RowData>(
   rows: Row<TData>[],
-  columnAggregators: Record<string, AggregationFnName | 'custom'>,
+  columnAggregators: Record<string, AggregationFnName | "custom">,
   customFns: Record<string, AggregationFn>,
 ): Record<string, number | null> {
   const totals: Record<string, number | null> = {};
@@ -50,7 +47,7 @@ function computeGrandTotals<TData extends RowData>(
 
 function computeSubtotals<TData extends RowData>(
   rows: Row<TData>[],
-  columnAggregators: Record<string, AggregationFnName | 'custom'>,
+  columnAggregators: Record<string, AggregationFnName | "custom">,
   customFns: Record<string, AggregationFn>,
 ): Row<TData>[] {
   const result: Row<TData>[] = [];
@@ -107,7 +104,7 @@ function computeSubtotals<TData extends RowData>(
 
 function applyAggregations<TData extends RowData>(
   rows: Row<TData>[],
-  columnAggregators: Record<string, AggregationFnName | 'custom'>,
+  columnAggregators: Record<string, AggregationFnName | "custom">,
   customFns: Record<string, AggregationFn>,
 ): Row<TData>[] {
   if (Object.keys(columnAggregators).length === 0) {
@@ -129,7 +126,7 @@ function applyAggregations<TData extends RowData>(
     };
 
     const grandTotalRow: Row<TData> = {
-      id: 'grandTotal',
+      id: "grandTotal",
       index: withSubtotals.length,
       original: {} as TData,
       values: grandTotalValues,
@@ -148,19 +145,20 @@ export function createAggregationPlugin<
   TData extends RowData,
   TState extends AggregationTableState = AggregationTableState,
 >(options: AggregationPluginOptions = {}): PivotTablePlugin<TData, TState> {
-  const { defaultAggregator = 'sum', autoAggregateColumns = [] } = options;
+  const { defaultAggregator = "sum", autoAggregateColumns = [] } = options;
 
   const customFnsRef: Record<string, AggregationFn> = {};
   let cache: CacheEntry<TData> = {
     rows: null,
     result: null,
-    columnAggregators: '',
+    columnAggregators: "",
   };
 
   return {
-    name: 'aggregation',
+    name: "aggregation",
     getInitialState: (state) => {
-      const initialAggregators: Record<string, AggregationFnName | 'custom'> = {};
+      const initialAggregators: Record<string, AggregationFnName | "custom"> =
+        {};
       for (const col of autoAggregateColumns) {
         initialAggregators[col] = defaultAggregator;
       }
@@ -205,10 +203,10 @@ export function createAggregationPlugin<
       return columns.map((col) => {
         const aggName = columnAggregators[col.id];
         let label: string | undefined;
-        if (aggName && aggName !== 'custom') {
+        if (aggName && aggName !== "custom") {
           label = aggName.charAt(0).toUpperCase() + aggName.slice(1);
-        } else if (aggName === 'custom') {
-          label = 'Custom';
+        } else if (aggName === "custom") {
+          label = "Custom";
         }
 
         return {
@@ -228,7 +226,10 @@ export function createAggregationPlugin<
       const prevAggs = prevState.columnAggregators ?? {};
       const nextAggs = nextState.columnAggregators ?? {};
 
-      if (serializeColumnAggregators(prevAggs) !== serializeColumnAggregators(nextAggs)) {
+      if (
+        serializeColumnAggregators(prevAggs) !==
+        serializeColumnAggregators(nextAggs)
+      ) {
         cache.rows = null;
         cache.result = null;
       }

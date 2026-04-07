@@ -1,4 +1,4 @@
-import type { AggregationFn, AggregationFnName } from '../../types/aggregation';
+import type { AggregationFn, AggregationFnName } from "../../types/aggregation";
 
 function toNumber(value: unknown): number | null {
   if (value == null) return null;
@@ -19,7 +19,8 @@ export const sum: AggregationFn = (values: unknown[]): number | null => {
   return hasValue ? total : null;
 };
 
-export const count: AggregationFn = (values: unknown[]): number => values.length;
+export const count: AggregationFn = (values: unknown[]): number =>
+  values.length;
 
 export const avg: AggregationFn = (values: unknown[]): number | null => {
   let total = 0;
@@ -85,23 +86,67 @@ export const stddev: AggregationFn = (values: unknown[]): number | null => {
   return varResult !== null ? Math.sqrt(varResult) : null;
 };
 
+/**
+ * Returns the sum of values as a baseline for percentage calculations.
+ * Note: True pctOfTotal requires grand total context passed from the matrix.
+ * This returns the raw sum as a placeholder.
+ */
 export const pctOfTotal: AggregationFn = (values: unknown[]): number | null => {
-  let grandTotal = 0;
+  let total = 0;
+  let hasValue = false;
   for (let i = 0; i < values.length; i++) {
     const n = toNumber(values[i]);
-    if (n !== null) grandTotal += n;
+    if (n !== null) {
+      total += n;
+      hasValue = true;
+    }
   }
-  if (grandTotal === 0) return null;
-  return grandTotal;
+  return hasValue ? total : null;
 };
 
-export const runningTotal: AggregationFn = (values: unknown[]): number | null => {
-  let total = 0;
+/**
+ * Returns each value as a percentage of the column's total.
+ * Input: array of values, returns percentage contribution of the sum.
+ */
+export const pctOfColumn: AggregationFn = (
+  values: unknown[],
+): number | null => {
+  const nums: number[] = [];
   for (let i = 0; i < values.length; i++) {
     const n = toNumber(values[i]);
-    if (n !== null) total += n;
+    if (n !== null) nums.push(n);
   }
-  return values.length > 0 ? total : null;
+  if (nums.length === 0) return null;
+  const total = nums.reduce((a, b) => a + b, 0);
+  if (total === 0) return null;
+  // Returns the percentage that the total sum represents (always 100 when aggregating a single group)
+  // When used per-cell, the caller should pass individual values, not the full column
+  return 100;
+};
+
+/**
+ * Returns running (cumulative) sum of values up to each position.
+ * Returns array of cumulative sums or null if all values are null.
+ */
+export const runningTotal: AggregationFn = (
+  values: unknown[],
+): number | null => {
+  let total = 0;
+  let hasValue = false;
+  const running: number[] = [];
+
+  for (let i = 0; i < values.length; i++) {
+    const n = toNumber(values[i]);
+    if (n !== null) {
+      total += n;
+      hasValue = true;
+    }
+    running.push(total);
+  }
+
+  if (!hasValue) return null;
+  // Return last value of running total (the final cumulative sum)
+  return running[running.length - 1];
 };
 
 export const countDistinct: AggregationFn = (values: unknown[]): number => {
@@ -125,30 +170,32 @@ export const aggregationFns: Record<AggregationFnName, AggregationFn> = {
   stddev,
   variance,
   pctOfTotal,
+  pctOfColumn,
   runningTotal,
   countDistinct,
 };
 
 export const AGGREGATOR_LABELS: Record<AggregationFnName, string> = {
-  sum: 'Sum',
-  count: 'Count',
-  avg: 'Average',
-  min: 'Minimum',
-  max: 'Maximum',
-  median: 'Median',
-  stddev: 'Std Deviation',
-  variance: 'Variance',
-  pctOfTotal: '% of Total',
-  runningTotal: 'Running Total',
-  countDistinct: 'Count Distinct',
+  sum: "Sum",
+  count: "Count",
+  avg: "Average",
+  min: "Minimum",
+  max: "Maximum",
+  median: "Median",
+  stddev: "Std Deviation",
+  variance: "Variance",
+  pctOfTotal: "% of Total",
+  pctOfColumn: "% of Column",
+  runningTotal: "Running Total",
+  countDistinct: "Count Distinct",
 };
 
 export function resolveAggregationFn(
-  name: AggregationFnName | 'custom',
+  name: AggregationFnName | "custom",
   customFns: Record<string, AggregationFn>,
   columnId: string,
 ): AggregationFn | null {
-  if (name === 'custom') {
+  if (name === "custom") {
     return customFns[columnId] ?? null;
   }
   return aggregationFns[name] ?? null;

@@ -1,7 +1,7 @@
-import { R as RowData, T as TableState, c as PivotTableOptions, P as PivotTableInstance, a as PivotTablePlugin } from './column-BK8uBDec.js';
-export { d as Column, e as ColumnDef, C as ColumnFilter, f as PivotTablePluginContext, b as Row, g as RowMeta, h as RowModel, S as SortingRule, U as Updater, i as createDefaultTableState } from './column-BK8uBDec.js';
+import { R as RowData, T as TableState, c as PivotTableOptions, P as PivotTableInstance, a as PivotTablePlugin } from './column-Cw_j7cBM.js';
+export { d as Column, e as ColumnDef, C as ColumnFilter, f as PivotTablePluginContext, b as Row, g as RowMeta, h as RowModel, S as SortingRule, U as Updater, i as createDefaultTableState } from './column-Cw_j7cBM.js';
 export { DEFAULT_MANIFESTS, PivotTableStore, PluginManifest, PluginRegistry, createPivotTableStore, createPluginRegistry } from './store/index.js';
-export { A as AggregationInput, L as LegacyAggregationFn, P as PivotApi, a as PivotTableState, b as PivotTableWithPivot, c as createPivotPlugin, l as legacyAggregationFns, r as resolveAggregationFn, u as usePivot, w as withPivot } from './pivot-zWmmhXeB.js';
+export { A as AggregationInput, L as LegacyAggregationFn, P as PivotApi, a as PivotTableState, b as PivotTableWithPivot, c as createPivotPlugin, l as legacyAggregationFns, r as resolveAggregationFn, u as usePivot, w as withPivot } from './pivot-vEarqXPf.js';
 export { useVirtualColumns, useVirtualRows } from './hooks/index.js';
 export { PivotTableWithSorting, SortingApi, SortingTableState, createSortingPlugin, useSorting, withSorting } from './plugins/sorting.js';
 export { FilteringApi, FilteringTableState, PivotTableWithFiltering, createFilteringPlugin, useFiltering, withFiltering } from './plugins/filtering.js';
@@ -49,17 +49,17 @@ interface CopyToClipboardOptions {
 }
 declare function copyToClipboard(options: CopyToClipboardOptions): Promise<boolean>;
 
-type AggregationFnName = 'sum' | 'count' | 'avg' | 'min' | 'max' | 'median' | 'stddev' | 'variance' | 'pctOfTotal' | 'runningTotal' | 'countDistinct';
+type AggregationFnName = "sum" | "count" | "avg" | "min" | "max" | "median" | "stddev" | "variance" | "pctOfTotal" | "pctOfColumn" | "runningTotal" | "countDistinct";
 type AggregationFn<TValue = unknown> = (values: TValue[]) => number | null;
 interface AggregationState {
-    columnAggregators: Record<string, AggregationFnName | 'custom'>;
+    columnAggregators: Record<string, AggregationFnName | "custom">;
 }
 type AggregationTableState = TableState & AggregationState;
 interface AggregationApi<TData extends RowData, TState extends AggregationTableState = AggregationTableState> {
-    getColumnAggregator: (columnId: string) => AggregationFnName | 'custom' | undefined;
-    getColumnAggregators: () => Record<string, AggregationFnName | 'custom'>;
-    setColumnAggregator: (columnId: string, updater: AggregationFnName | 'custom' | ((previous: AggregationFnName | 'custom') => AggregationFnName | 'custom')) => void;
-    setColumnAggregators: (updater: Record<string, AggregationFnName | 'custom'> | ((previous: Record<string, AggregationFnName | 'custom'>) => Record<string, AggregationFnName | 'custom'>)) => void;
+    getColumnAggregator: (columnId: string) => AggregationFnName | "custom" | undefined;
+    getColumnAggregators: () => Record<string, AggregationFnName | "custom">;
+    setColumnAggregator: (columnId: string, updater: AggregationFnName | "custom" | ((previous: AggregationFnName | "custom") => AggregationFnName | "custom")) => void;
+    setColumnAggregators: (updater: Record<string, AggregationFnName | "custom"> | ((previous: Record<string, AggregationFnName | "custom">) => Record<string, AggregationFnName | "custom">)) => void;
     registerFn: (name: string, fn: AggregationFn) => void;
     unregisterFn: (name: string) => void;
     getRegisteredFns: () => Readonly<Record<string, AggregationFn>>;
@@ -86,8 +86,8 @@ declare function usePivotAggregation<TData extends RowData, TState extends Aggre
 
 interface AggregatorDropdownProps {
     columnId: string;
-    currentValue: AggregationFnName | 'custom' | undefined;
-    onChange: (columnId: string, fnName: AggregationFnName | 'custom') => void;
+    currentValue: AggregationFnName | "custom" | undefined;
+    onChange: (columnId: string, fnName: AggregationFnName | "custom") => void;
     aggregators?: AggregationFnName[];
     className?: string;
 }
@@ -101,11 +101,20 @@ declare const max: AggregationFn;
 declare const median: AggregationFn;
 declare const variance: AggregationFn;
 declare const stddev: AggregationFn;
+/**
+ * Returns the sum of values as a baseline for percentage calculations.
+ * Note: True pctOfTotal requires grand total context passed from the matrix.
+ * This returns the raw sum as a placeholder.
+ */
 declare const pctOfTotal: AggregationFn;
+/**
+ * Returns running (cumulative) sum of values up to each position.
+ * Returns array of cumulative sums or null if all values are null.
+ */
 declare const runningTotal: AggregationFn;
 declare const countDistinct: AggregationFn;
 declare const aggregationFns: Record<AggregationFnName, AggregationFn>;
 declare const AGGREGATOR_LABELS: Record<AggregationFnName, string>;
-declare function resolveAggregationFn(name: AggregationFnName | 'custom', customFns: Record<string, AggregationFn>, columnId: string): AggregationFn | null;
+declare function resolveAggregationFn(name: AggregationFnName | "custom", customFns: Record<string, AggregationFn>, columnId: string): AggregationFn | null;
 
 export { AGGREGATOR_LABELS, type AggregationApi, type AggregationFn, type AggregationFnName, type AggregationPluginOptions, type AggregationState, type AggregationTableState, AggregatorDropdown, type CopyToClipboardOptions, type ExportCsvOptions, type ExportCsvResult, PivotTableInstance, PivotTableOptions, PivotTablePlugin, type PivotTableWithAggregation, RowData, TableState, aggregationFns, avg, copyToClipboard, count, countDistinct, createAggregationApi, createAggregationPlugin, exportCSV, max, median, min, pctOfTotal, resolveAggregationFn as resolveAggregationFnPlugin, runningTotal, serializeCSV, stddev, sum, usePivotAggregation, usePivotTable, variance, withAggregation };

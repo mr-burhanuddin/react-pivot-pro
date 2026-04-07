@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface LandingPageProps {
   onNavigate: (path: string) => void;
@@ -6,40 +6,46 @@ interface LandingPageProps {
 
 const FEATURES = [
   {
-    icon: '⬡',
-    title: 'Headless UI',
-    description: 'Complete control over rendering. The library manages state and data transformation — you own the UI.',
+    icon: "⬡",
+    title: "Headless UI",
+    description:
+      "Complete control over rendering. The library manages state and data transformation — you own the UI.",
   },
   {
-    icon: '⚡',
-    title: 'Plugin System',
-    description: 'Modular architecture with createX/withX/useX pattern. Enable only what you need.',
+    icon: "⚡",
+    title: "Plugin System",
+    description:
+      "Modular architecture with createX/withX/useX pattern. Enable only what you need.",
   },
   {
-    icon: 'Σ',
-    title: 'Per-Column Aggregators',
-    description: 'Sum, average, count, and custom aggregations — configured independently per column.',
+    icon: "Σ",
+    title: "Per-Column Aggregators",
+    description:
+      "Sum, average, count, and custom aggregations — configured independently per column.",
   },
   {
-    icon: '◫',
-    title: 'Virtualization',
-    description: 'Handle 100K+ rows smoothly with @tanstack/virtual-core row and column virtualization.',
+    icon: "◫",
+    title: "Virtualization",
+    description:
+      "Handle 100K+ rows smoothly with @tanstack/virtual-core row and column virtualization.",
   },
   {
-    icon: '↕',
-    title: 'Drag & Drop',
-    description: 'Reorder rows and columns with @dnd-kit/core integration. Full state persistence.',
+    icon: "↕",
+    title: "Drag & Drop",
+    description:
+      "Reorder rows and columns with @dnd-kit/core integration. Full state persistence.",
   },
   {
-    icon: '文',
-    title: 'i18n Support',
-    description: 'Built-in internationalization with i18next. RTL support and locale-aware formatting.',
+    icon: "文",
+    title: "i18n Support",
+    description:
+      "Built-in internationalization with i18next. RTL support and locale-aware formatting.",
   },
 ];
 
 const PLUGIN_TABS = [
   {
-    label: 'Aggregation',
+    label: "Aggregation",
     code: `import { createAggregationPlugin, withAggregation } from 'react-pivot-pro';
 
 const table = usePivotTable({
@@ -52,7 +58,7 @@ const tableWithAgg = withAggregation(table);
 tableWithAgg.aggregation.setColumnAggregator('amount', 'sum');`,
   },
   {
-    label: 'Sorting',
+    label: "Sorting",
     code: `import { createSortingPlugin, withSorting } from 'react-pivot-pro';
 
 const table = usePivotTable({
@@ -65,7 +71,7 @@ const tableWithSort = withSorting(table);
 tableWithSort.sorting.toggleSorting('name');`,
   },
   {
-    label: 'Filtering',
+    label: "Filtering",
     code: `import { createFilteringPlugin, withFiltering } from 'react-pivot-pro';
 
 const table = usePivotTable({
@@ -78,7 +84,7 @@ const tableWithFilter = withFiltering(table);
 tableWithFilter.filtering.setGlobalFilter('search term');`,
   },
   {
-    label: 'Grouping',
+    label: "Grouping",
     code: `import { createGroupingPlugin, withGrouping } from 'react-pivot-pro';
 
 const table = usePivotTable({
@@ -91,7 +97,7 @@ const tableWithGroup = withGrouping(table);
 tableWithGroup.grouping.setRowGrouping(['region', 'category']);`,
   },
   {
-    label: 'DnD',
+    label: "DnD",
     code: `import { createDndRowPlugin, withDndRow } from 'react-pivot-pro';
 
 const table = usePivotTable({
@@ -124,13 +130,20 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
           <div>
             <div className="hero-badge">v0.1 — Now with Aggregation Plugin</div>
             <h1 className="hero-title">
-              Headless pivot tables<br />for React
+              Headless pivot tables
+              <br />
+              for React
             </h1>
             <p className="hero-subtitle">
-              A plugin-driven engine that manages state and data transformation while you own the UI rendering. TypeScript-first, zero config.
+              A plugin-driven engine that manages state and data transformation
+              while you own the UI rendering. TypeScript-first, zero config.
             </p>
             <div className="hero-actions">
-              <a href="#/quick-start" className="btn-primary" onClick={handleNav('/quick-start')}>
+              <a
+                href="#/quick-start"
+                className="btn-primary"
+                onClick={handleNav("/quick-start")}
+              >
                 Get started →
               </a>
               <a
@@ -204,7 +217,8 @@ function MyPivotTable() {
       <section className="section">
         <h2 className="section-title">Everything you need</h2>
         <p className="section-subtitle">
-          Built for developers who want full control without reinventing the wheel.
+          Built for developers who want full control without reinventing the
+          wheel.
         </p>
         <div className="feature-grid">
           {FEATURES.map((f) => (
@@ -226,22 +240,28 @@ function MyPivotTable() {
               <div className="quick-step-number">1</div>
               <h3>Install</h3>
               <p>Add the package to your project</p>
-              <pre><code>npm install react-pivot-pro</code></pre>
+              <pre>
+                <code>npm install react-pivot-pro</code>
+              </pre>
             </div>
             <div className="quick-step">
               <div className="quick-step-number">2</div>
               <h3>Wrap</h3>
               <p>Create your table with plugins</p>
-              <pre><code>{`const table = usePivotTable({
+              <pre>
+                <code>{`const table = usePivotTable({
   data, columns, plugins
-});`}</code></pre>
+});`}</code>
+              </pre>
             </div>
             <div className="quick-step">
               <div className="quick-step-number">3</div>
               <h3>Render</h3>
               <p>Build your UI with full control</p>
-              <pre><code>{`{table.getRowModel().rows
-  .map(row => <Row />)}`}</code></pre>
+              <pre>
+                <code>{`{table.getRowModel().rows
+  .map(row => <Row />)}`}</code>
+              </pre>
             </div>
           </div>
         </div>
@@ -257,7 +277,7 @@ function MyPivotTable() {
           {PLUGIN_TABS.map((tab, i) => (
             <button
               key={tab.label}
-              className={`plugin-tab ${activeTab === i ? 'active' : ''}`}
+              className={`plugin-tab ${activeTab === i ? "active" : ""}`}
               onClick={() => setActiveTab(i)}
             >
               {tab.label}
@@ -266,7 +286,9 @@ function MyPivotTable() {
         </div>
         <div className="plugin-demo">
           <div className="plugin-demo-code">
-            <pre><code>{PLUGIN_TABS[activeTab].code}</code></pre>
+            <pre>
+              <code>{PLUGIN_TABS[activeTab].code}</code>
+            </pre>
           </div>
         </div>
       </section>

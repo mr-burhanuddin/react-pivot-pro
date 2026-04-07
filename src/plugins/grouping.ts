@@ -1,4 +1,11 @@
-import type { PivotTableInstance, PivotTablePlugin, Row, RowData, TableState } from '../types';
+import type {
+  PivotTableInstance,
+  PivotTablePlugin,
+  Row,
+  RowData,
+  TableState,
+} from "../types";
+import { areArraysEqual } from "../utils/helpers";
 
 export interface GroupingTableState extends TableState {
   rowGrouping: string[];
@@ -12,8 +19,12 @@ export interface GroupingApi<
 > {
   getRowGrouping: () => string[];
   getColumnGrouping: () => string[];
-  setRowGrouping: (updater: string[] | ((previous: string[]) => string[])) => void;
-  setColumnGrouping: (updater: string[] | ((previous: string[]) => string[])) => void;
+  setRowGrouping: (
+    updater: string[] | ((previous: string[]) => string[]),
+  ) => void;
+  setColumnGrouping: (
+    updater: string[] | ((previous: string[]) => string[]),
+  ) => void;
   toggleGroupExpanded: (groupId: string, value?: boolean) => void;
   getIsGroupExpanded: (groupId: string) => boolean;
   resetGrouping: () => void;
@@ -33,18 +44,6 @@ interface GroupBuildNode<TData extends RowData> {
   value: unknown;
   leafRows: Row<TData>[];
   children: GroupBuildNode<TData>[];
-}
-
-function areArraysEqual(left: string[], right: string[]): boolean {
-  if (left.length !== right.length) {
-    return false;
-  }
-  for (let index = 0; index < left.length; index += 1) {
-    if (left[index] !== right[index]) {
-      return false;
-    }
-  }
-  return true;
 }
 
 function areExpandedMapsEqual(
@@ -70,7 +69,7 @@ function buildGroupedTree<TData extends RowData>(
   rows: Row<TData>[],
   grouping: string[],
   depth = 0,
-  parentPath = '',
+  parentPath = "",
 ): GroupBuildNode<TData>[] {
   if (depth >= grouping.length) {
     return [];
@@ -82,7 +81,7 @@ function buildGroupedTree<TData extends RowData>(
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const value = row.values[columnId];
-    const key = value == null ? '__null__' : String(value);
+    const key = value == null ? "__null__" : String(value);
     const existing = grouped.get(key);
     if (existing) {
       existing.rows.push(row);
@@ -93,7 +92,9 @@ function buildGroupedTree<TData extends RowData>(
 
   const result: GroupBuildNode<TData>[] = [];
   for (const [groupKey, bucket] of grouped.entries()) {
-    const path = parentPath ? `${parentPath}|${columnId}:${groupKey}` : `${columnId}:${groupKey}`;
+    const path = parentPath
+      ? `${parentPath}|${columnId}:${groupKey}`
+      : `${columnId}:${groupKey}`;
     result.push({
       id: `group::${path}`,
       depth,
@@ -103,7 +104,7 @@ function buildGroupedTree<TData extends RowData>(
       children: buildGroupedTree(bucket.rows, grouping, depth + 1, path),
     });
   }
-  
+
   return result;
 }
 
@@ -119,22 +120,23 @@ function flattenGroupedRows<TData extends RowData>(
       const node = inputNodes[n];
       const groupingColumn = grouping[node.depth];
       const firstRow = node.leafRows[0];
-      const groupValues: Record<string, unknown> = firstRow 
+      const groupValues: Record<string, unknown> = firstRow
         ? { ...firstRow.values }
         : {};
-      
+
       groupValues.__group = true;
       groupValues.__depth = node.depth;
       groupValues.__groupingColumnId = groupingColumn;
       groupValues.__groupingValue = node.value;
       groupValues.__rowCount = node.leafRows.length;
-      
+
       const groupRow: Row<TData> = {
         id: node.id,
         index: -1,
         original: {} as TData,
         values: groupValues,
-        getValue: <TValue = unknown>(columnId: string) => groupValues[columnId] as TValue,
+        getValue: <TValue = unknown>(columnId: string) =>
+          groupValues[columnId] as TValue,
       };
 
       output.push(groupRow);
@@ -170,7 +172,7 @@ export function createGroupingPlugin<
   };
 
   return {
-    name: 'grouping',
+    name: "grouping",
     getInitialState: (state) => ({
       ...state,
       rowGrouping: state.rowGrouping ?? [],
@@ -198,8 +200,12 @@ export function createGroupingPlugin<
         return rows;
       }
 
-      const validColumnIds = new Set(context.columns.map((column) => column.id));
-      const normalizedGrouping = rowGrouping.filter((columnId) => validColumnIds.has(columnId));
+      const validColumnIds = new Set(
+        context.columns.map((column) => column.id),
+      );
+      const normalizedGrouping = rowGrouping.filter((columnId) =>
+        validColumnIds.has(columnId),
+      );
 
       if (normalizedGrouping.length === 0) {
         cache.rows = rows;
@@ -210,7 +216,11 @@ export function createGroupingPlugin<
       }
 
       const tree = buildGroupedTree(rows, normalizedGrouping);
-      const groupedRows = flattenGroupedRows(tree, normalizedGrouping, expandedGroups);
+      const groupedRows = flattenGroupedRows(
+        tree,
+        normalizedGrouping,
+        expandedGroups,
+      );
 
       cache.rows = rows;
       cache.grouping = normalizedGrouping;
@@ -220,13 +230,21 @@ export function createGroupingPlugin<
     },
     onStateChange: (state, previousState, context) => {
       if (
-        areArraysEqual(state.rowGrouping ?? [], previousState.rowGrouping ?? []) &&
-        areArraysEqual(state.columnGrouping ?? [], previousState.columnGrouping ?? [])
+        areArraysEqual(
+          state.rowGrouping ?? [],
+          previousState.rowGrouping ?? [],
+        ) &&
+        areArraysEqual(
+          state.columnGrouping ?? [],
+          previousState.columnGrouping ?? [],
+        )
       ) {
         return;
       }
 
-      const validColumnIds = new Set(context.columns.map((column) => column.id));
+      const validColumnIds = new Set(
+        context.columns.map((column) => column.id),
+      );
       const rowGrouping = (state.rowGrouping ?? []).filter((columnId) =>
         validColumnIds.has(columnId),
       );
@@ -258,14 +276,16 @@ export function createGroupingApi<
     setRowGrouping: (updater) => {
       table.setState((previous) => {
         const current = previous.rowGrouping ?? [];
-        const next = typeof updater === 'function' ? [...updater(current)] : updater;
+        const next =
+          typeof updater === "function" ? [...updater(current)] : updater;
         return { ...previous, rowGrouping: next };
       });
     },
     setColumnGrouping: (updater) => {
       table.setState((previous) => {
         const current = previous.columnGrouping ?? [];
-        const next = typeof updater === 'function' ? [...updater(current)] : updater;
+        const next =
+          typeof updater === "function" ? [...updater(current)] : updater;
         return { ...previous, columnGrouping: next };
       });
     },
@@ -282,7 +302,8 @@ export function createGroupingApi<
         };
       });
     },
-    getIsGroupExpanded: (groupId) => table.getState().expandedGroups?.[groupId] !== false,
+    getIsGroupExpanded: (groupId) =>
+      table.getState().expandedGroups?.[groupId] !== false,
     resetGrouping: () => {
       table.setState((previous) => ({
         ...previous,
@@ -297,7 +318,9 @@ export function createGroupingApi<
 export function withGrouping<
   TData extends RowData,
   TState extends GroupingTableState = GroupingTableState,
->(table: PivotTableInstance<TData, TState>): PivotTableWithGrouping<TData, TState> {
+>(
+  table: PivotTableInstance<TData, TState>,
+): PivotTableWithGrouping<TData, TState> {
   return Object.assign(table, {
     grouping: createGroupingApi(table),
   });

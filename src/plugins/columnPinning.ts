@@ -1,5 +1,11 @@
-import type { Column } from '../types/column';
-import type { PivotTableInstance, PivotTablePlugin, RowData, TableState } from '../types';
+import type { Column } from "../types/column";
+import type {
+  PivotTableInstance,
+  PivotTablePlugin,
+  RowData,
+  TableState,
+} from "../types";
+import { unique } from "../utils/helpers";
 
 export interface ColumnPinningPosition {
   left: string[];
@@ -12,7 +18,7 @@ export interface ColumnPinningState {
 
 export type ColumnPinningTableState = TableState & ColumnPinningState;
 
-export type PinSide = 'left' | 'right' | false;
+export type PinSide = "left" | "right" | false;
 
 export interface ColumnPinningApi<
   TData extends RowData,
@@ -37,13 +43,13 @@ export type PivotTableWithColumnPinning<
   columnPinning: ColumnPinningApi<TData, TState>;
 };
 
-function unique(items: string[]): string[] {
-  return Array.from(new Set(items));
-}
-
-function normalizePinning(value?: ColumnPinningPosition): ColumnPinningPosition {
+function normalizePinning(
+  value?: ColumnPinningPosition,
+): ColumnPinningPosition {
   const left = unique(value?.left ?? []);
-  const right = unique((value?.right ?? []).filter((columnId) => !left.includes(columnId)));
+  const right = unique(
+    (value?.right ?? []).filter((columnId) => !left.includes(columnId)),
+  );
   return { left, right };
 }
 
@@ -52,7 +58,7 @@ export function createColumnPinningPlugin<
   TState extends ColumnPinningTableState = ColumnPinningTableState,
 >(): PivotTablePlugin<TData, TState> {
   return {
-    name: 'columnPinning',
+    name: "columnPinning",
     getInitialState: (state) => ({
       ...state,
       columnPinning: normalizePinning(state.columnPinning),
@@ -60,28 +66,34 @@ export function createColumnPinningPlugin<
     transformColumns: (columns, context) => {
       const state = context.state as TState;
       const pinning = normalizePinning(state.columnPinning);
-      
+
       if (pinning.left.length === 0 && pinning.right.length === 0) {
         return columns;
       }
-      
+
       const leftSet = new Set(pinning.left);
       const rightSet = new Set(pinning.right);
-      
+
       const leftColumns: Column<TData>[] = [];
       const centerColumns: Column<TData>[] = [];
       const rightColumns: Column<TData>[] = [];
-      
+
       for (const col of columns) {
         if (leftSet.has(col.id)) {
-          leftColumns.push({ ...col, meta: { ...col.meta, pinned: 'left' } as Column<TData>['meta'] });
+          leftColumns.push({
+            ...col,
+            meta: { ...col.meta, pinned: "left" } as Column<TData>["meta"],
+          });
         } else if (rightSet.has(col.id)) {
-          rightColumns.push({ ...col, meta: { ...col.meta, pinned: 'right' } as Column<TData>['meta'] });
+          rightColumns.push({
+            ...col,
+            meta: { ...col.meta, pinned: "right" } as Column<TData>["meta"],
+          });
         } else {
           centerColumns.push(col);
         }
       }
-      
+
       return [...leftColumns, ...centerColumns, ...rightColumns];
     },
   };
@@ -102,9 +114,7 @@ export function createColumnPinningApi<
       table.setState((previous) => {
         const previousPinning = normalizePinning(previous.columnPinning);
         const nextPinning =
-          typeof updater === 'function'
-            ? updater(previousPinning)
-            : updater;
+          typeof updater === "function" ? updater(previousPinning) : updater;
 
         return {
           ...previous,
@@ -118,9 +128,9 @@ export function createColumnPinningApi<
         const left = pinning.left.filter((id) => id !== columnId);
         const right = pinning.right.filter((id) => id !== columnId);
 
-        if (side === 'left') {
+        if (side === "left") {
           left.push(columnId);
-        } else if (side === 'right') {
+        } else if (side === "right") {
           right.push(columnId);
         }
 
@@ -150,7 +160,9 @@ export function createColumnPinningApi<
 export function withColumnPinning<
   TData extends RowData,
   TState extends ColumnPinningTableState = ColumnPinningTableState,
->(table: PivotTableInstance<TData, TState>): PivotTableWithColumnPinning<TData, TState> {
+>(
+  table: PivotTableInstance<TData, TState>,
+): PivotTableWithColumnPinning<TData, TState> {
   return Object.assign(table, {
     columnPinning: createColumnPinningApi(table),
   });
