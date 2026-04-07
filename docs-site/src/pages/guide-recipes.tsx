@@ -1,10 +1,14 @@
-import DocPage from '../components/DocPage';
+import DocPage from "../components/DocPage";
 
 export default function GuideRecipes() {
   return (
-    <DocPage title="Copy-Paste Recipes" subtitle="Ready-to-use patterns for common pivot table scenarios">
+    <DocPage
+      title="Copy-Paste Recipes"
+      subtitle="Ready-to-use patterns for common pivot table scenarios"
+    >
       <h2>Sortable Table</h2>
-      <pre><code>{`import { usePivotTable, createSortingPlugin, withSorting } from 'react-pivot-pro';
+      <pre>
+        <code>{`import { usePivotTable, createSortingPlugin, withSorting } from 'react-pivot-pro';
 
 function SortableTable({ data, columns }) {
   const table = withSorting(
@@ -39,10 +43,12 @@ function SortableTable({ data, columns }) {
       </tbody>
     </table>
   );
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Filterable Table with Global Search</h2>
-      <pre><code>{`import { usePivotTable, createFilteringPlugin, withFiltering } from 'react-pivot-pro';
+      <pre>
+        <code>{`import { usePivotTable, createFilteringPlugin, withFiltering } from 'react-pivot-pro';
 
 function FilterableTable({ data, columns }) {
   const table = withFiltering(
@@ -75,10 +81,12 @@ function FilterableTable({ data, columns }) {
       </table>
     </div>
   );
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Grouped Table with Aggregation</h2>
-      <pre><code>{`import {
+      <pre>
+        <code>{`import {
   usePivotTable,
   createGroupingPlugin,
   createAggregationPlugin,
@@ -135,10 +143,12 @@ function GroupedAggregatedTable({ data, columns }) {
       </tbody>
     </table>
   );
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Export to CSV</h2>
-      <pre><code>{`import { exportCSV } from 'react-pivot-pro';
+      <pre>
+        <code>{`import { exportCSV } from 'react-pivot-pro';
 
 function ExportButton({ table }) {
   const handleExport = () => {
@@ -155,10 +165,12 @@ function ExportButton({ table }) {
   };
 
   return <button onClick={handleExport}>Export CSV</button>;
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Virtualized Large Table</h2>
-      <pre><code>{`import { usePivotTable, useVirtualRows } from 'react-pivot-pro';
+      <pre>
+        <code>{`import { usePivotTable, useVirtualRows } from 'react-pivot-pro';
 
 function VirtualTable({ data, columns }) {
   const table = usePivotTable({ data, columns });
@@ -195,10 +207,12 @@ function VirtualTable({ data, columns }) {
       </div>
     </div>
   );
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Column Visibility Toggle</h2>
-      <pre><code>{`import { usePivotTable, createColumnVisibilityPlugin, withColumnVisibility } from 'react-pivot-pro';
+      <pre>
+        <code>{`import { usePivotTable, createColumnVisibilityPlugin, withColumnVisibility } from 'react-pivot-pro';
 
 function TableWithVisibility({ data, columns }) {
   const table = withColumnVisibility(
@@ -235,13 +249,20 @@ function TableWithVisibility({ data, columns }) {
       {/* Table renders only visible columns */}
     </div>
   );
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>See Also</h2>
       <ul>
-        <li><a href="#/api-use-pivot-table">usePivotTable Hook</a></li>
-        <li><a href="#/plugin-sorting">Sorting Plugin</a></li>
-        <li><a href="#/plugin-aggregation">Aggregation Plugin</a></li>
+        <li>
+          <a href="#/api-use-pivot-table">usePivotTable Hook</a>
+        </li>
+        <li>
+          <a href="#/plugin-sorting">Sorting Plugin</a>
+        </li>
+        <li>
+          <a href="#/plugin-aggregation">Aggregation Plugin</a>
+        </li>
       </ul>
     </DocPage>
   );

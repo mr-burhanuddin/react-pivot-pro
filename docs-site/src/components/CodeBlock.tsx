@@ -12,7 +12,6 @@ export default function CodeBlock({
   filename,
 }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleCopy = useCallback(() => {
@@ -55,20 +54,6 @@ export default function CodeBlock({
         </div>
         <div style={{ display: "flex", gap: 4 }}>
           <button
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              padding: "2px 8px",
-              fontSize: 11,
-              borderRadius: "var(--radius-sm)",
-              border: "1px solid var(--border-default)",
-              background: "var(--code-btn-bg)",
-              cursor: "pointer",
-              color: "var(--code-btn-text)",
-            }}
-          >
-            {collapsed ? "Expand" : "Collapse"}
-          </button>
-          <button
             onClick={handleCopy}
             style={{
               padding: "2px 8px",
@@ -88,23 +73,21 @@ export default function CodeBlock({
           </button>
         </div>
       </div>
-      {!collapsed && (
-        <pre
-          style={{
-            margin: 0,
-            padding: 16,
-            fontSize: 13,
-            lineHeight: 1.6,
-            fontFamily: "var(--font-mono)",
-            overflow: "auto",
-            maxHeight: 400,
-            background: "var(--code-bg)",
-            color: "var(--code-text)",
-          }}
-        >
-          <code>{code}</code>
-        </pre>
-      )}
+      <pre
+        style={{
+          margin: 0,
+          padding: 16,
+          fontSize: 13,
+          lineHeight: 1.6,
+          fontFamily: "var(--font-mono)",
+          overflow: "auto",
+          maxHeight: 400,
+          background: "var(--code-bg)",
+          color: "var(--code-text)",
+        }}
+      >
+        <code>{code}</code>
+      </pre>
     </div>
   );
 }

@@ -1,13 +1,21 @@
-import DocPage from '../components/DocPage';
+import DocPage from "../components/DocPage";
 
 export default function GuideI18n() {
   return (
-    <DocPage title="Internationalization (i18n)" subtitle="Translate headers, labels, and UI text in your pivot tables">
+    <DocPage
+      title="Internationalization (i18n)"
+      subtitle="Translate headers, labels, and UI text in your pivot tables"
+    >
       <h2>Overview</h2>
-      <p>react-pivot-pro is headless, meaning all UI rendering is controlled by you. This makes i18n straightforward — use your preferred translation library (i18next, react-intl, etc.) to translate any text in your table.</p>
+      <p>
+        react-pivot-pro is headless, meaning all UI rendering is controlled by
+        you. This makes i18n straightforward — use your preferred translation
+        library (i18next, react-intl, etc.) to translate any text in your table.
+      </p>
 
       <h2>With i18next</h2>
-      <pre><code>{`import { useTranslation } from 'react-i18next';
+      <pre>
+        <code>{`import { useTranslation } from 'react-i18next';
 import { usePivotTable, createSortingPlugin, withSorting } from 'react-pivot-pro';
 
 function I18nTable({ data }) {
@@ -43,10 +51,12 @@ function I18nTable({ data }) {
       {/* ... */}
     </table>
   );
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Translation File Example</h2>
-      <pre><code>{`// en/table.json
+      <pre>
+        <code>{`// en/table.json
 {
   "columns": {
     "region": "Region",
@@ -88,30 +98,42 @@ function I18nTable({ data }) {
     "collapse": "Colapsar",
     "rows": "{{count}} filas"
   }
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Dynamic Column Headers</h2>
-      <p>When column definitions depend on translations, memoize them with the locale as a dependency:</p>
-      <pre><code>{`const { t, i18n } = useTranslation('table');
+      <p>
+        When column definitions depend on translations, memoize them with the
+        locale as a dependency:
+      </p>
+      <pre>
+        <code>{`const { t, i18n } = useTranslation('table');
 
 const columns = useMemo(() => [
   { id: 'region', accessorKey: 'region', header: t('columns.region') },
   { id: 'product', accessorKey: 'product', header: t('columns.product') },
   { id: 'amount', accessorKey: 'amount', header: t('columns.amount') },
-], [t, i18n.language]);`}</code></pre>
+], [t, i18n.language]);`}</code>
+      </pre>
 
       <h2>RTL Support</h2>
-      <p>For right-to-left languages, adjust table styling based on the current locale direction:</p>
-      <pre><code>{`const { i18n } = useTranslation();
+      <p>
+        For right-to-left languages, adjust table styling based on the current
+        locale direction:
+      </p>
+      <pre>
+        <code>{`const { i18n } = useTranslation();
 const isRTL = i18n.dir() === 'rtl';
 
 <table dir={isRTL ? 'rtl' : 'ltr'}>
   {/* Table content */}
-</table>`}</code></pre>
+</table>`}</code>
+      </pre>
 
       <h2>Number and Date Formatting</h2>
       <p>Use Intl APIs for locale-aware formatting of cell values:</p>
-      <pre><code>{`const formatCurrency = (value, locale = 'en-US', currency = 'USD') => {
+      <pre>
+        <code>{`const formatCurrency = (value, locale = 'en-US', currency = 'USD') => {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
@@ -128,11 +150,16 @@ const formatDate = (value, locale = 'en-US') => {
   accessorKey: 'amount',
   header: t('columns.amount'),
   cell: (val) => formatCurrency(val, i18n.language),
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Aggregator Labels</h2>
-      <p>The built-in <code>AGGREGATOR_LABELS</code> can be overridden for custom translations:</p>
-      <pre><code>{`import { AGGREGATOR_LABELS } from 'react-pivot-pro';
+      <p>
+        The built-in <code>AGGREGATOR_LABELS</code> can be overridden for custom
+        translations:
+      </p>
+      <pre>
+        <code>{`import { AGGREGATOR_LABELS } from 'react-pivot-pro';
 
 // Create translated labels
 const translatedLabels = {
@@ -140,13 +167,20 @@ const translatedLabels = {
   count: t('aggregation.count'),
   avg: t('aggregation.avg'),
   // ...
-};`}</code></pre>
+};`}</code>
+      </pre>
 
       <h2>See Also</h2>
       <ul>
-        <li><a href="#/api-column-def">ColumnDef Type</a></li>
-        <li><a href="#/plugin-aggregation">Aggregation Plugin</a></li>
-        <li><a href="#/guide-recipes">Copy-Paste Recipes</a></li>
+        <li>
+          <a href="#/api-column-def">ColumnDef Type</a>
+        </li>
+        <li>
+          <a href="#/plugin-aggregation">Aggregation Plugin</a>
+        </li>
+        <li>
+          <a href="#/guide-recipes">Copy-Paste Recipes</a>
+        </li>
       </ul>
     </DocPage>
   );

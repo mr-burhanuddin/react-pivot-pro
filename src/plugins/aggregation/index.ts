@@ -1,6 +1,10 @@
-export { createAggregationPlugin } from './aggregationPlugin';
-export { createAggregationApi, withAggregation, usePivotAggregation } from './aggregationApi';
-export { AggregatorDropdown } from './AggregatorDropdown';
+export { createAggregationPlugin } from "./aggregationPlugin";
+export {
+  createAggregationApi,
+  withAggregation,
+  usePivotAggregation,
+} from "./aggregationApi";
+export { AggregatorDropdown } from "./AggregatorDropdown";
 export {
   sum,
   count,
@@ -11,12 +15,13 @@ export {
   stddev,
   variance,
   pctOfTotal,
+  pctOfColumn,
   runningTotal,
   countDistinct,
   aggregationFns,
   AGGREGATOR_LABELS,
   resolveAggregationFn,
-} from './aggregators';
+} from "./aggregators";
 export type {
   AggregationFnName,
   AggregationFn,
@@ -25,4 +30,4 @@ export type {
   AggregationApi,
   AggregationPluginOptions,
   PivotTableWithAggregation,
-} from '../../types/aggregation';
+} from "../../types/aggregation";

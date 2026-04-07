@@ -1,5 +1,11 @@
-import type { Column } from '../types/column';
-import type { PivotTableInstance, PivotTablePlugin, RowData, TableState } from '../types';
+import type { Column } from "../types/column";
+import type {
+  PivotTableInstance,
+  PivotTablePlugin,
+  RowData,
+  TableState,
+} from "../types";
+import { unique } from "../utils/helpers";
 
 export interface ColumnOrderingState {
   columnOrder: string[];
@@ -13,7 +19,9 @@ export interface ColumnOrderingApi<
 > {
   getColumnOrder: () => string[];
   getOrderedColumnIds: () => string[];
-  setColumnOrder: (updater: string[] | ((previous: string[]) => string[])) => void;
+  setColumnOrder: (
+    updater: string[] | ((previous: string[]) => string[]),
+  ) => void;
   reorderColumn: (columnId: string, targetIndex: number) => void;
   resetColumnOrder: () => void;
 }
@@ -25,16 +33,12 @@ export type PivotTableWithColumnOrdering<
   columnOrdering: ColumnOrderingApi<TData, TState>;
 };
 
-function unique(items: string[]): string[] {
-  return Array.from(new Set(items));
-}
-
 export function createColumnOrderingPlugin<
   TData extends RowData,
   TState extends ColumnOrderingTableState = ColumnOrderingTableState,
 >(): PivotTablePlugin<TData, TState> {
   return {
-    name: 'columnOrdering',
+    name: "columnOrdering",
     getInitialState: (state) => ({
       ...state,
       columnOrder: unique(state.columnOrder ?? []),
@@ -42,19 +46,19 @@ export function createColumnOrderingPlugin<
     transformColumns: (columns, context) => {
       const state = context.state as TState;
       const columnOrder = unique(state.columnOrder ?? []);
-      
+
       if (columnOrder.length === 0) {
         return columns;
       }
-      
+
       const columnMap = new Map<string, Column<TData>>();
       for (const col of columns) {
         columnMap.set(col.id, col);
       }
-      
+
       const orderedColumns: Column<TData>[] = [];
       const remaining: Column<TData>[] = [];
-      
+
       for (const id of columnOrder) {
         const col = columnMap.get(id);
         if (col) {
@@ -62,13 +66,13 @@ export function createColumnOrderingPlugin<
           columnMap.delete(id);
         }
       }
-      
+
       for (const col of columns) {
         if (columnMap.has(col.id)) {
           remaining.push(col);
         }
       }
-      
+
       return [...orderedColumns, ...remaining];
     },
   };
@@ -85,8 +89,12 @@ export function createColumnOrderingApi<
 
   const normalizeOrder = (order: string[]): string[] => {
     const allColumnIds = table.columns.map((column) => column.id);
-    const knownInOrder = order.filter((columnId) => allColumnIds.includes(columnId));
-    const remainder = allColumnIds.filter((columnId) => !knownInOrder.includes(columnId));
+    const knownInOrder = order.filter((columnId) =>
+      allColumnIds.includes(columnId),
+    );
+    const remainder = allColumnIds.filter(
+      (columnId) => !knownInOrder.includes(columnId),
+    );
     return [...knownInOrder, ...remainder];
   };
 
@@ -97,9 +105,7 @@ export function createColumnOrderingApi<
       table.setState((previous) => {
         const previousOrder = previous.columnOrder ?? [];
         const nextOrder =
-          typeof updater === 'function'
-            ? updater(previousOrder)
-            : updater;
+          typeof updater === "function" ? updater(previousOrder) : updater;
 
         return {
           ...previous,
@@ -115,7 +121,10 @@ export function createColumnOrderingApi<
         return;
       }
 
-      const boundedTargetIndex = Math.max(0, Math.min(targetIndex, currentOrder.length - 1));
+      const boundedTargetIndex = Math.max(
+        0,
+        Math.min(targetIndex, currentOrder.length - 1),
+      );
       if (currentIndex === boundedTargetIndex) {
         return;
       }
@@ -141,7 +150,9 @@ export function createColumnOrderingApi<
 export function withColumnOrdering<
   TData extends RowData,
   TState extends ColumnOrderingTableState = ColumnOrderingTableState,
->(table: PivotTableInstance<TData, TState>): PivotTableWithColumnOrdering<TData, TState> {
+>(
+  table: PivotTableInstance<TData, TState>,
+): PivotTableWithColumnOrdering<TData, TState> {
   return Object.assign(table, {
     columnOrdering: createColumnOrderingApi(table),
   });

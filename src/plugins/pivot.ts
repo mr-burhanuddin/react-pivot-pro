@@ -1,4 +1,10 @@
-import type { PivotTableInstance, PivotTablePlugin, Row, RowData, TableState } from '../types';
+import type {
+  PivotTableInstance,
+  PivotTablePlugin,
+  Row,
+  RowData,
+  TableState,
+} from "../types";
 import {
   createPivotEngineResult,
   type PivotColumnHeader,
@@ -7,8 +13,8 @@ import {
   type PivotGroupByDef,
   type PivotServerAdapter,
   type PivotValueDef,
-} from '../core/pivotEngine';
-import type { LegacyAggregationFn as AggregationFn } from '../utils/aggregationFns';
+} from "../core/pivotEngine";
+import type { LegacyAggregationFn as AggregationFn } from "../utils/aggregationFns";
 
 export interface PivotTableState extends TableState {
   rowGrouping: string[];
@@ -17,7 +23,10 @@ export interface PivotTableState extends TableState {
   pivotEnabled: boolean;
 }
 
-export interface PivotApi<TData extends RowData, TState extends PivotTableState = PivotTableState> {
+export interface PivotApi<
+  TData extends RowData,
+  TState extends PivotTableState = PivotTableState,
+> {
   getPivotResult: () => PivotEngineResult<TData> | null;
   getPivotColumns: () => PivotColumnHeader[];
   getPivotValues: () => PivotValueDef<TData>[];
@@ -77,7 +86,9 @@ function arePivotValueDefsEqual<TData extends RowData>(
   return true;
 }
 
-function toGroupDefs<TData extends RowData>(grouping: string[]): PivotGroupByDef<TData>[] {
+function toGroupDefs<TData extends RowData>(
+  grouping: string[],
+): PivotGroupByDef<TData>[] {
   return grouping.map((id) => ({ id }));
 }
 
@@ -93,12 +104,15 @@ export function createPivotPlugin<
   let lastResultRef: Row<TData>[] | null = null;
 
   return {
-    name: 'pivot',
+    name: "pivot",
     getInitialState: (state) => ({
       ...state,
       rowGrouping: state.rowGrouping ?? [],
       columnGrouping: state.columnGrouping ?? [],
-      pivotValues: (state.pivotValues as PivotValueDef<TData>[]) ?? options.defaultValues ?? [],
+      pivotValues:
+        (state.pivotValues as PivotValueDef<TData>[]) ??
+        options.defaultValues ??
+        [],
       pivotEnabled: state.pivotEnabled ?? false,
     }),
     transformRows: (rows, context) => {
@@ -106,7 +120,9 @@ export function createPivotPlugin<
       const rowGrouping = context.state.rowGrouping ?? [];
       const columnGrouping = context.state.columnGrouping ?? [];
       const pivotValues =
-        (context.state.pivotValues as PivotValueDef<TData>[]) ?? options.defaultValues ?? [];
+        (context.state.pivotValues as PivotValueDef<TData>[]) ??
+        options.defaultValues ??
+        [];
 
       if (!pivotEnabled || !clientSide || pivotValues.length === 0) {
         lastRowsRef = rows;
@@ -136,7 +152,7 @@ export function createPivotPlugin<
       });
 
       const rowKeys: string[] = result.rowHeaders.map((path) =>
-        path.length === 0 ? '__root__' : path.join('||'),
+        path.length === 0 ? "__root__" : path.join("||"),
       );
 
       const pivotRows: Row<TData>[] = rowKeys.map((rowKey, index) => {
@@ -157,7 +173,8 @@ export function createPivotPlugin<
           index,
           original: {} as TData,
           values: rowValues,
-          getValue: <TValue = unknown>(columnId: string) => rowValues[columnId] as TValue,
+          getValue: <TValue = unknown>(columnId: string) =>
+            rowValues[columnId] as TValue,
         };
       });
 
@@ -174,14 +191,19 @@ export function createPivotPlugin<
 export function createPivotApi<
   TData extends RowData,
   TState extends PivotTableState = PivotTableState,
->(table: PivotTableInstance<TData, TState>, options: PivotPluginOptions<TData> = {}): PivotApi<TData, TState> {
+>(
+  table: PivotTableInstance<TData, TState>,
+  options: PivotPluginOptions<TData> = {},
+): PivotApi<TData, TState> {
   const getRequest = (): PivotEngineRequest<TData> => {
     const state = table.getState();
     return {
       rowGroupBy: (state.rowGrouping ?? []).map((id) => ({ id })),
       columnGroupBy: (state.columnGrouping ?? []).map((id) => ({ id })),
       values:
-        ((state.pivotValues as PivotValueDef<TData>[]) ?? options.defaultValues) ?? [],
+        (state.pivotValues as PivotValueDef<TData>[]) ??
+        options.defaultValues ??
+        [],
     };
   };
 
@@ -230,12 +252,16 @@ export function createPivotApi<
     getPivotResult,
     getPivotColumns: () => getPivotResult()?.columnHeaders ?? [],
     getPivotValues: () =>
-      ((table.getState().pivotValues as PivotValueDef<TData>[]) ?? options.defaultValues) ?? [],
+      (table.getState().pivotValues as PivotValueDef<TData>[]) ??
+      options.defaultValues ??
+      [],
     setPivotValues: (updater) => {
       table.setState((previous) => {
         const current =
-          ((previous.pivotValues as PivotValueDef<TData>[]) ?? options.defaultValues) ?? [];
-        const next = typeof updater === 'function' ? updater(current) : updater;
+          (previous.pivotValues as PivotValueDef<TData>[]) ??
+          options.defaultValues ??
+          [];
+        const next = typeof updater === "function" ? updater(current) : updater;
         return { ...previous, pivotValues: next };
       });
     },
@@ -270,6 +296,9 @@ export function withPivot<
 export function usePivot<
   TData extends RowData,
   TState extends PivotTableState = PivotTableState,
->(table: PivotTableInstance<TData, TState>): PivotApi<TData, TState> {
-  return createPivotApi(table);
+>(
+  table: PivotTableInstance<TData, TState>,
+  options: PivotPluginOptions<TData> = {},
+): PivotApi<TData, TState> {
+  return createPivotApi(table, options);
 }

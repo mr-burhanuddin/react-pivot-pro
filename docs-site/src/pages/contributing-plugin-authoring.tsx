@@ -1,13 +1,21 @@
-import DocPage from '../components/DocPage';
+import DocPage from "../components/DocPage";
 
 export default function ContributingPluginAuthoring() {
   return (
-    <DocPage title="Plugin Authoring Guide" subtitle="Create custom plugins to extend react-pivot-pro with new features">
+    <DocPage
+      title="Plugin Authoring Guide"
+      subtitle="Create custom plugins to extend react-pivot-pro with new features"
+    >
       <h2>Plugin Architecture</h2>
-      <p>Plugins are the primary extension mechanism. Each plugin implements the <code>PivotTablePlugin</code> interface and can transform rows, columns, state, or react to state changes.</p>
+      <p>
+        Plugins are the primary extension mechanism. Each plugin implements the{" "}
+        <code>PivotTablePlugin</code> interface and can transform rows, columns,
+        state, or react to state changes.
+      </p>
 
       <h2>Minimal Plugin</h2>
-      <pre><code>{`import type { PivotTablePlugin, RowData, TableState, Row, Column, PivotTablePluginContext } from 'react-pivot-pro';
+      <pre>
+        <code>{`import type { PivotTablePlugin, RowData, TableState, Row, Column, PivotTablePluginContext } from 'react-pivot-pro';
 
 export function createHighlightPlugin<TData extends RowData, TState extends TableState>(
   options: { highlightColumnId: string },
@@ -25,10 +33,12 @@ export function createHighlightPlugin<TData extends RowData, TState extends Tabl
       }));
     },
   };
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Plugin with State</h2>
-      <pre><code>{`export interface MyPluginState extends TableState {
+      <pre>
+        <code>{`export interface MyPluginState extends TableState {
   myFeature: {
     enabled: boolean;
     threshold: number;
@@ -58,11 +68,13 @@ export function createMyPlugin<
       });
     },
   };
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Plugin with API</h2>
       <p>Provide a companion API for consumers to interact with your plugin:</p>
-      <pre><code>{`export interface MyPluginApi<TData extends RowData, TState extends MyPluginState> {
+      <pre>
+        <code>{`export interface MyPluginApi<TData extends RowData, TState extends MyPluginState> {
   isEnabled: () => boolean;
   setEnabled: (enabled: boolean) => void;
   getThreshold: () => number;
@@ -98,11 +110,13 @@ export function withMyPlugin<TData extends RowData, TState extends MyPluginState
   return Object.assign(table, {
     myPlugin: createMyPluginApi(table),
   });
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Plugin with Caching</h2>
       <p>Implement caching to avoid unnecessary recomputation:</p>
-      <pre><code>{`export function createCachedPlugin<TData extends RowData, TState extends TableState>(
+      <pre>
+        <code>{`export function createCachedPlugin<TData extends RowData, TState extends TableState>(
   options: { cacheKey: string },
 ): PivotTablePlugin<TData, TState> {
   const cache = {
@@ -136,10 +150,12 @@ export function withMyPlugin<TData extends RowData, TState extends MyPluginState
       return result;
     },
   };
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Plugin with Column Transformation</h2>
-      <pre><code>{`export function createColumnMetaPlugin<
+      <pre>
+        <code>{`export function createColumnMetaPlugin<
   TData extends RowData,
   TState extends TableState,
 >(): PivotTablePlugin<TData, TState> {
@@ -156,10 +172,12 @@ export function withMyPlugin<TData extends RowData, TState extends MyPluginState
       }));
     },
   };
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Plugin with State Validation</h2>
-      <pre><code>{`export function createValidatedPlugin<
+      <pre>
+        <code>{`export function createValidatedPlugin<
   TData extends RowData,
   TState extends TableState,
 >(): PivotTablePlugin<TData, TState> {
@@ -178,10 +196,12 @@ export function withMyPlugin<TData extends RowData, TState extends MyPluginState
       }
     },
   };
-}`}</code></pre>
+}`}</code>
+      </pre>
 
       <h2>Testing Your Plugin</h2>
-      <pre><code>{`import { describe, it, expect } from 'vitest';
+      <pre>
+        <code>{`import { describe, it, expect } from 'vitest';
 import { createMyPlugin } from './myPlugin';
 
 describe('myPlugin', () => {
@@ -213,25 +233,42 @@ describe('myPlugin', () => {
     expect(result).toHaveLength(1);
     expect(result?.[0].id).toBe('2');
   });
-});`}</code></pre>
+});`}</code>
+      </pre>
 
       <h2>Plugin Checklist</h2>
       <ul>
-        <li>[ ] Unique <code>name</code> property</li>
-        <li>[ ] <code>getInitialState</code> for plugin state</li>
+        <li>
+          [ ] Unique <code>name</code> property
+        </li>
+        <li>
+          [ ] <code>getInitialState</code> for plugin state
+        </li>
         <li>[ ] Caching for transform functions</li>
-        <li>[ ] State validation in <code>onStateChange</code></li>
-        <li>[ ] Companion API with <code>withX</code> wrapper</li>
-        <li>[ ] Hook with <code>useX</code> pattern</li>
+        <li>
+          [ ] State validation in <code>onStateChange</code>
+        </li>
+        <li>
+          [ ] Companion API with <code>withX</code> wrapper
+        </li>
+        <li>
+          [ ] Hook with <code>useX</code> pattern
+        </li>
         <li>[ ] TypeScript types exported</li>
         <li>[ ] Unit tests</li>
       </ul>
 
       <h2>See Also</h2>
       <ul>
-        <li><a href="#/api-plugin-api">Plugin API Reference</a></li>
-        <li><a href="#/contributing-setup">Development Setup</a></li>
-        <li><a href="#/contributing-changelog">Changelog</a></li>
+        <li>
+          <a href="#/api-plugin-api">Plugin API Reference</a>
+        </li>
+        <li>
+          <a href="#/contributing-setup">Development Setup</a>
+        </li>
+        <li>
+          <a href="#/contributing-changelog">Changelog</a>
+        </li>
       </ul>
     </DocPage>
   );
