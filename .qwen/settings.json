@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir *)",
+      "Bash(npx *)",
+      "Bash(true)",
+      "Bash(npm run *)",
+      "Bash(findstr *)",
+      "Bash(powershell *)",
+      "Bash(del *)",
+      "Bash(import *)",
+      "Bash(interface *)",
+      "Bash(const *)",
+      "Bash('c')",
+      "Bash(})",
+      "Bash(return *)",
+      "Bash(return)",
+      "Bash(: *)",
+      "Bash(padding: *)",
+      "Bash(textalign: *)",
+      "Bash(fontweight: *)",
+      "Bash(fontsize: *)",
+      "Bash(texttransform: *)",
+      "Bash(letterspacing: *)",
+      "Bash(color: *)",
+      "Bash(background: *)",
+      "Bash(borderbottom: *)",
+      "Bash(position: *)",
+      "Bash(...style,)",
+      "Bash(}})",
+      "Bash(.writefilesync)",
+      "Bash(console.log)",
+      "Bash(dir *)"
+    ]
+  },
+  "$version": 3
+}

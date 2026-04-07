@@ -1,7 +1,7 @@
-import { R as RowData, T as TableState, c as PivotTableOptions, P as PivotTableInstance, a as PivotTablePlugin } from './column-BK8uBDec.js';
-export { d as Column, e as ColumnDef, C as ColumnFilter, f as PivotTablePluginContext, b as Row, g as RowMeta, h as RowModel, S as SortingRule, U as Updater, i as createDefaultTableState } from './column-BK8uBDec.js';
+import { R as RowData, T as TableState, c as PivotTableOptions, P as PivotTableInstance, a as PivotTablePlugin } from './column-Cw_j7cBM.js';
+export { d as Column, e as ColumnDef, C as ColumnFilter, f as PivotTablePluginContext, b as Row, g as RowMeta, h as RowModel, S as SortingRule, U as Updater, i as createDefaultTableState } from './column-Cw_j7cBM.js';
 export { DEFAULT_MANIFESTS, PivotTableStore, PluginManifest, PluginRegistry, createPivotTableStore, createPluginRegistry } from './store/index.js';
-export { A as AggregationInput, L as LegacyAggregationFn, P as PivotApi, a as PivotTableState, b as PivotTableWithPivot, c as createPivotPlugin, l as legacyAggregationFns, r as resolveAggregationFn, u as usePivot, w as withPivot } from './pivot-zWmmhXeB.js';
+export { A as AggregationInput, L as LegacyAggregationFn, P as PivotApi, a as PivotTableState, b as PivotTableWithPivot, c as createPivotPlugin, l as legacyAggregationFns, r as resolveAggregationFn, u as usePivot, w as withPivot } from './pivot-CFXTU2iA.js';
 export { useVirtualColumns, useVirtualRows } from './hooks/index.js';
 export { PivotTableWithSorting, SortingApi, SortingTableState, createSortingPlugin, useSorting, withSorting } from './plugins/sorting.js';
 export { FilteringApi, FilteringTableState, PivotTableWithFiltering, createFilteringPlugin, useFiltering, withFiltering } from './plugins/filtering.js';
@@ -86,8 +86,8 @@ declare function usePivotAggregation<TData extends RowData, TState extends Aggre
 
 interface AggregatorDropdownProps {
     columnId: string;
-    currentValue: AggregationFnName | 'custom' | undefined;
-    onChange: (columnId: string, fnName: AggregationFnName | 'custom') => void;
+    currentValue: AggregationFnName | "custom" | undefined;
+    onChange: (columnId: string, fnName: AggregationFnName | "custom") => void;
     aggregators?: AggregationFnName[];
     className?: string;
 }
@@ -101,7 +101,16 @@ declare const max: AggregationFn;
 declare const median: AggregationFn;
 declare const variance: AggregationFn;
 declare const stddev: AggregationFn;
+/**
+ * Returns the sum of values.
+ * Note: This is a placeholder - true pctOfTotal requires grand total context.
+ * For percentage of column calculations, use pctOfColumn.
+ */
 declare const pctOfTotal: AggregationFn;
+/**
+ * Returns running (cumulative) sum of values up to each position.
+ * Returns array of cumulative sums or null if all values are null.
+ */
 declare const runningTotal: AggregationFn;
 declare const countDistinct: AggregationFn;
 declare const aggregationFns: Record<AggregationFnName, AggregationFn>;

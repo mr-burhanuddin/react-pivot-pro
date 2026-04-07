@@ -1,6 +1,6 @@
-import { createStore, type StoreApi } from 'zustand/vanilla';
-import type { TableState, Updater } from '../types';
-import { createDefaultTableState } from '../types';
+import { createStore, type StoreApi } from "zustand/vanilla";
+import type { TableState, Updater } from "../types";
+import { createDefaultTableState } from "../types";
 
 export interface PivotTableStore<TState extends TableState> {
   state: TState;
@@ -12,10 +12,20 @@ function resolveUpdater<TState extends TableState>(
   updater: Updater<TState>,
   previousState: TState,
 ): TState {
-  if (typeof updater === 'function') {
+  if (typeof updater === "function") {
     return (updater as (previous: TState) => TState)(previousState);
   }
   return updater;
+}
+
+function shallowEqualState(a: TableState, b: TableState): boolean {
+  const aKeys = Object.keys(a) as (keyof TableState)[];
+  const bKeys = Object.keys(b) as (keyof TableState)[];
+  if (aKeys.length !== bKeys.length) return false;
+  for (const key of aKeys) {
+    if (a[key] !== b[key]) return false;
+  }
+  return true;
 }
 
 export function createPivotTableStore<TState extends TableState>(
@@ -26,6 +36,10 @@ export function createPivotTableStore<TState extends TableState>(
     setState: (updater) => {
       const currentState = get().state;
       const nextState = resolveUpdater(updater, currentState);
+
+      if (shallowEqualState(currentState, nextState)) {
+        return;
+      }
 
       set((previousStore) => ({
         ...previousStore,

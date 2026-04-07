@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react';
-import type { AggregationFnName } from '../../types/aggregation';
-import { AGGREGATOR_LABELS, aggregationFns } from './aggregators';
+import { useState, useCallback } from "react";
+import type { AggregationFnName } from "../../types/aggregation";
+import { AGGREGATOR_LABELS, aggregationFns } from "./aggregators";
 
 interface AggregatorDropdownProps {
   columnId: string;
-  currentValue: AggregationFnName | 'custom' | undefined;
-  onChange: (columnId: string, fnName: AggregationFnName | 'custom') => void;
+  currentValue: AggregationFnName | "custom" | undefined;
+  onChange: (columnId: string, fnName: AggregationFnName | "custom") => void;
   aggregators?: AggregationFnName[];
   className?: string;
 }
@@ -19,17 +19,18 @@ export function AggregatorDropdown({
 }: AggregatorDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const availableAggregators = aggregators ?? (Object.keys(aggregationFns) as AggregationFnName[]);
+  const availableAggregators =
+    aggregators ?? (Object.keys(aggregationFns) as AggregationFnName[]);
 
   const currentLabel =
-    currentValue && currentValue !== 'custom'
-      ? AGGREGATOR_LABELS[currentValue] ?? currentValue
-      : currentValue === 'custom'
-        ? 'Custom'
-        : 'Select...';
+    currentValue && currentValue !== "custom"
+      ? (AGGREGATOR_LABELS[currentValue] ?? currentValue)
+      : currentValue === "custom"
+        ? "Custom"
+        : "Select...";
 
   const handleSelect = useCallback(
-    (fnName: AggregationFnName | 'custom') => {
+    (fnName: AggregationFnName | "custom") => {
       onChange(columnId, fnName);
       setIsOpen(false);
     },
@@ -37,19 +38,23 @@ export function AggregatorDropdown({
   );
 
   return (
-    <div className={className ?? 'aggregator-dropdown'} style={{ position: 'relative', display: 'inline-block' }}>
+    <div
+      className={className ?? "aggregator-dropdown"}
+      style={{ position: "relative", display: "inline-block" }}
+    >
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          padding: '4px 8px',
-          fontSize: '0.8rem',
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 4,
-          cursor: 'pointer',
+          padding: "4px 8px",
+          fontSize: "0.8rem",
+          background: "var(--surface-2)",
+          border: "1px solid var(--border-default)",
+          borderRadius: "var(--radius-md)",
+          cursor: "pointer",
           minWidth: 100,
-          textAlign: 'left',
+          textAlign: "left",
+          color: "var(--text-primary)",
         }}
       >
         {currentLabel} ▾
@@ -57,18 +62,18 @@ export function AggregatorDropdown({
       {isOpen && (
         <ul
           style={{
-            position: 'absolute',
-            top: '100%',
+            position: "absolute",
+            top: "100%",
             left: 0,
             marginTop: 2,
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 6,
+            background: "var(--surface-3)",
+            border: "1px solid var(--border-default)",
+            borderRadius: "var(--radius-md)",
             padding: 4,
             zIndex: 100,
             minWidth: 140,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            listStyle: 'none',
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            listStyle: "none",
             margin: 0,
           }}
         >
@@ -78,16 +83,22 @@ export function AggregatorDropdown({
                 type="button"
                 onClick={() => handleSelect(fnName)}
                 style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '6px 8px',
-                  fontSize: '0.8rem',
-                  background: currentValue === fnName ? 'var(--accent-soft)' : 'transparent',
-                  border: 'none',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  color: currentValue === fnName ? 'var(--accent)' : 'inherit',
+                  display: "block",
+                  width: "100%",
+                  padding: "6px 8px",
+                  fontSize: "0.8rem",
+                  background:
+                    currentValue === fnName
+                      ? "color-mix(in srgb, var(--accent-600) 10%, transparent)"
+                      : "transparent",
+                  border: "none",
+                  borderRadius: "var(--radius-sm)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  color:
+                    currentValue === fnName
+                      ? "var(--accent-600)"
+                      : "var(--text-primary)",
                 }}
               >
                 {AGGREGATOR_LABELS[fnName] ?? fnName}
