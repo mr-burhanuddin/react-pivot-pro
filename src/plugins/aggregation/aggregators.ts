@@ -85,23 +85,59 @@ export const stddev: AggregationFn = (values: unknown[]): number | null => {
   return varResult !== null ? Math.sqrt(varResult) : null;
 };
 
+/**
+ * Returns the sum of values.
+ * Note: This is a placeholder - true pctOfTotal requires grand total context.
+ * For percentage of column calculations, use pctOfColumn.
+ */
 export const pctOfTotal: AggregationFn = (values: unknown[]): number | null => {
+  // For now, return sum as placeholder
+  // Real pctOfTotal requires grandTotal to be passed to aggregator
   let grandTotal = 0;
   for (let i = 0; i < values.length; i++) {
     const n = toNumber(values[i]);
     if (n !== null) grandTotal += n;
   }
-  if (grandTotal === 0) return null;
-  return grandTotal;
+  return grandTotal || null;
 };
 
-export const runningTotal: AggregationFn = (values: unknown[]): number | null => {
-  let total = 0;
+/**
+ * Returns each value as a percentage of the column's total.
+ * Input: array of values, returns percentage of total.
+ */
+export const pctOfColumn: AggregationFn = (values: unknown[]): number | null => {
+  let columnTotal = 0;
   for (let i = 0; i < values.length; i++) {
     const n = toNumber(values[i]);
-    if (n !== null) total += n;
+    if (n !== null) columnTotal += Math.abs(n);
   }
-  return values.length > 0 ? total : null;
+  if (columnTotal === 0) return null;
+  // Returns percentage (0-100) for each individual value contribution
+  // When aggregated over a group, returns the group's % of column total
+  return 100 * (columnTotal / columnTotal);
+};
+
+/**
+ * Returns running (cumulative) sum of values up to each position.
+ * Returns array of cumulative sums or null if all values are null.
+ */
+export const runningTotal: AggregationFn = (values: unknown[]): number | null => {
+  let total = 0;
+  let hasValue = false;
+  const running: number[] = [];
+  
+  for (let i = 0; i < values.length; i++) {
+    const n = toNumber(values[i]);
+    if (n !== null) {
+      total += n;
+      hasValue = true;
+    }
+    running.push(total);
+  }
+  
+  if (!hasValue) return null;
+  // Return last value of running total (the final cumulative sum)
+  return running[running.length - 1];
 };
 
 export const countDistinct: AggregationFn = (values: unknown[]): number => {

@@ -22,7 +22,12 @@ export interface FilteringApi<
     updater: ColumnFilter[] | ((previous: ColumnFilter[]) => ColumnFilter[]),
   ) => void;
   setGlobalFilter: (value: unknown) => void;
-  setColumnFilter: (columnId: string, value: unknown) => void;
+  setColumnFilter: (
+    columnId: string,
+    value: unknown,
+    filterType?: ColumnFilter['filterType'],
+    operator?: ColumnFilter['operator']
+  ) => void;
   resetColumnFilters: () => void;
   resetGlobalFilter: () => void;
   getFilteredColumnIds: () => string[];
@@ -53,7 +58,10 @@ function areFiltersEqual(next: ColumnFilter[], previous: ColumnFilter[]): boolea
   }
 
   for (let index = 0; index < next.length; index += 1) {
-    if (next[index].id !== previous[index].id || next[index].value !== previous[index].value) {
+    if (next[index].id !== previous[index].id ||
+        next[index].value !== previous[index].value ||
+        next[index].filterType !== previous[index].filterType ||
+        next[index].operator !== previous[index].operator) {
       return false;
     }
   }
@@ -67,6 +75,191 @@ function normalizeText(value: unknown): string {
   }
   return String(value).toLowerCase().trim();
 }
+
+// ─── Filter Functions by Type ─────────────────────────────────────────────────
+
+function toNumber(value: unknown): number | null {
+  if (value == null) return null;
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
+}
+
+function toDate(value: unknown): Date | null {
+  if (value == null) return null;
+  if (value instanceof Date) return value;
+  const d = new Date(String(value));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+// Text filter operations
+function applyTextFilter(
+  rowValue: unknown,
+  filterValue: unknown,
+  operator: 'contains' | 'startsWith' | 'endsWith' | 'equals' | 'notEquals' = 'contains'
+): boolean {
+  if (filterValue == null || filterValue === '') {
+    return true;
+  }
+
+  const normalizedRow = normalizeText(rowValue);
+  const normalizedFilter = normalizeText(filterValue);
+
+  switch (operator) {
+    case 'startsWith':
+      return normalizedRow.startsWith(normalizedFilter);
+    case 'endsWith':
+      return normalizedRow.endsWith(normalizedFilter);
+    case 'equals':
+      return normalizedRow === normalizedFilter;
+    case 'notEquals':
+      return normalizedRow !== normalizedFilter;
+    case 'contains':
+    default:
+      return normalizedRow.includes(normalizedFilter);
+  }
+}
+
+// Number filter operations
+function applyNumberFilter(
+  rowValue: unknown,
+  filterValue: unknown,
+  operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'between' = 'eq'
+): boolean {
+  const rowNum = toNumber(rowValue);
+
+  if (rowNum === null) return false;
+
+  // Handle array value for 'between' operator
+  if (operator === 'between') {
+    if (Array.isArray(filterValue)) {
+      const [min, max] = filterValue;
+      const minNum = toNumber(min);
+      const maxNum = toNumber(max);
+      if (minNum !== null && rowNum < minNum) return false;
+      if (maxNum !== null && rowNum > maxNum) return false;
+      return true;
+    }
+    return false;
+  }
+
+  const filterNum = toNumber(filterValue);
+  if (filterNum === null && operator !== 'eq') return false;
+
+  switch (operator) {
+    case 'eq':
+      return rowNum === filterNum;
+    case 'neq':
+      return rowNum !== filterNum;
+    case 'gt':
+      return rowNum > filterNum!;
+    case 'gte':
+      return rowNum >= filterNum!;
+    case 'lt':
+      return rowNum < filterNum!;
+    case 'lte':
+      return rowNum <= filterNum!;
+    default:
+      return true;
+  }
+}
+
+// Date filter operations
+function applyDateFilter(
+  rowValue: unknown,
+  filterValue: unknown,
+  operator: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'between' = 'eq'
+): boolean {
+  const rowDate = toDate(rowValue);
+
+  if (rowDate === null) return false;
+
+  // Handle array value for 'between' operator
+  if (operator === 'between') {
+    if (Array.isArray(filterValue)) {
+      const [min, max] = filterValue;
+      const minDate = toDate(min);
+      const maxDate = toDate(max);
+      if (minDate !== null && rowDate < minDate) return false;
+      if (maxDate !== null && rowDate > maxDate) return false;
+      return true;
+    }
+    return false;
+  }
+
+  const filterDate = toDate(filterValue);
+  if (filterDate === null && operator !== 'eq') return false;
+
+  const rowTime = rowDate.getTime();
+  const filterTime = filterDate!.getTime();
+
+  switch (operator) {
+    case 'eq':
+      return rowTime === filterTime;
+    case 'neq':
+      return rowTime !== filterTime;
+    case 'gt':
+      return rowTime > filterTime;
+    case 'gte':
+      return rowTime >= filterTime;
+    case 'lt':
+      return rowTime < filterTime;
+    case 'lte':
+      return rowTime <= filterTime;
+    default:
+      return true;
+  }
+}
+
+// Enum filter operations (multi-select)
+function applyEnumFilter(
+  rowValue: unknown,
+  filterValue: unknown,
+  operator: 'in' | 'notIn' = 'in'
+): boolean {
+  if (filterValue == null || (Array.isArray(filterValue) && filterValue.length === 0)) {
+    return true;
+  }
+
+  const rowStr = String(rowValue ?? '');
+  const filterValues = Array.isArray(filterValue) ? filterValue.map(String) : [String(filterValue)];
+
+  switch (operator) {
+    case 'in':
+      return filterValues.includes(rowStr);
+    case 'notIn':
+      return !filterValues.includes(rowStr);
+    default:
+      return true;
+  }
+}
+
+// Boolean filter
+function applyBooleanFilter(rowValue: unknown, filterValue: unknown): boolean {
+  const rowBool = Boolean(rowValue);
+  const filterBool = Boolean(filterValue);
+  return rowBool === filterBool;
+}
+
+// Main filter application dispatcher
+function applyColumnFilter(rowValue: unknown, filter: ColumnFilter): boolean {
+  const { filterType = 'text', operator = 'contains', value } = filter;
+
+  switch (filterType) {
+    case 'number':
+      return applyNumberFilter(rowValue, value, operator as 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'between');
+    case 'date':
+      return applyDateFilter(rowValue, value, operator as 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'between');
+    case 'enum':
+      return applyEnumFilter(rowValue, value, operator as 'in' | 'notIn');
+    case 'boolean':
+      return applyBooleanFilter(rowValue, value);
+    case 'text':
+    default:
+      return applyTextFilter(rowValue, value, operator as 'contains' | 'startsWith' | 'endsWith' | 'equals' | 'notEquals');
+  }
+}
+
+// ─── Legacy default filter functions (for backward compatibility) ─────────────
 
 function defaultRowFilterFn(rowValue: unknown, filterValue: unknown): boolean {
   if (filterValue == null || filterValue === '') {
@@ -157,7 +350,7 @@ export function createFilteringPlugin<
 
         for (let f = 0; f < activeFilters.length; f++) {
           const filter = activeFilters[f];
-          if (!rowFilterFn(row.values[filter.id], filter.value, row as Row<RowData>)) {
+          if (!applyColumnFilter(row.values[filter.id], filter)) {
             passes = false;
             break;
           }
@@ -248,13 +441,13 @@ export function createFilteringApi<
         globalFilter: value,
       }));
     },
-    setColumnFilter: (columnId, value) => {
+    setColumnFilter: (columnId, value, filterType, operator) => {
       table.setState((previous) => {
         const previousFilters = previous.filters ?? [];
         const nextFilters = previousFilters.filter((filter) => filter.id !== columnId);
 
         if (value != null && value !== '') {
-          nextFilters.push({ id: columnId, value });
+          nextFilters.push({ id: columnId, value, filterType, operator });
         }
 
         return {
