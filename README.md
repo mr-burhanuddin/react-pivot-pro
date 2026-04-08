@@ -1,44 +1,31 @@
 # React Pivot Pro
 
 ![npm version](https://img.shields.io/npm/v/react-pivot-pro)
-![npm downloads](https://img.shields.io/npm/dm/react-pivot-pro)
-![license](https://img.shields.io/npm/l/react-pivot-pro)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)
 ![React](https://img.shields.io/badge/React-18%2B-blue)
-
-[![Build Status](https://github.com/your-username/react-pivot-pro/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/react-pivot-pro/actions)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/react-pivot-pro)](https://bundlephobia.com/package/react-pivot-pro)
-
-[Documentation](https://react-pivot-pro.vercel.app) | [API Reference](https://react-pivot-pro.vercel.app/docs) | [npm](https://www.npmjs.com/package/react-pivot-pro)
-
----
 
 Headless, plugin-driven pivot table engine for React + TypeScript.
 
-`react-pivot-pro` gives you a typed core table state/model layer, composable feature plugins (sorting, filtering, grouping, pivoting, DnD), and utility hooks (virtualization, export, clipboard/fullscreen) without forcing any UI framework.
+`react-pivot-pro` provides a typed core table state/model layer with composable feature plugins (sorting, filtering, grouping, pivoting, drag-and-drop) and utility hooks (virtualization, CSV export, clipboard) — without dictating any UI framework or rendering strategy. You own the UI; the library owns data, state, and transformation pipelines.
+
+---
 
 ## Features
 
-### Core engine
-- Headless `usePivotTable` hook
-- Controlled + uncontrolled state
-- Fully typed table state, row model, and plugin contracts
-- Plugin registration and composition
+- **Headless core** — `usePivotTable` manages data and state only; you render what you want
+- **Plugin architecture** — 10 built-in plugins, each independently composable
+- **Controlled + uncontrolled state** — via Zustand store with `Updater<T>` pattern
+- **Multi-column sorting** — with `Int32Array` index-based sort for performance
+- **Column + global filtering** — text, number, date, enum, boolean with rich operators
+- **Row/column grouping** — multi-level hierarchical grouping with expansion state
+- **Pivot matrix** — client-side via pivot engine or server-side via adapter interface
+- **Aggregation** — 12 built-in functions (sum, count, avg, min, max, median, stddev, variance, pctOfTotal, pctOfColumn, runningTotal, countDistinct) + custom function support
+- **Column visibility, ordering, pinning** — left/right frozen columns
+- **Drag-and-drop** — rows and columns via `@dnd-kit/core`
+- **Virtualization** — row and column virtualization via `@tanstack/virtual-core`
+- **Utilities** — CSV export with injection prevention, clipboard copy
 
-### Data features
-- Multi-column sorting
-- Column + global filtering
-- Column visibility, ordering, and pinning
-- Multi-level row/column grouping
-- Pivot matrix generation with multi-value aggregation
-- Custom aggregation functions
-- Client-side pivot + server-side adapter interface
-
-### Interaction + utilities
-- DnD helpers for column and row reordering (`@dnd-kit`)
-- Row and column virtualization hooks (`@tanstack/virtual-core`)
-- CSV export utility
-- Clipboard + fullscreen utilities
+---
 
 ## Installation
 
@@ -46,150 +33,257 @@ Headless, plugin-driven pivot table engine for React + TypeScript.
 npm install react-pivot-pro
 ```
 
-Peer/runtime deps used by feature modules:
-- `react` (>=18.0.0)
-- `zustand`
-- `@tanstack/virtual-core`
-- `@dnd-kit/core`
+**Peer/runtime dependencies used by feature modules:**
+
+| Package                  | Required by                                   |
+| ------------------------ | --------------------------------------------- |
+| `react >= 18.0.0`        | Core                                          |
+| `zustand`                | State management                              |
+| `@tanstack/virtual-core` | `useVirtualRows`, `useVirtualColumns`         |
+| `@dnd-kit/core`          | `createDndRowPlugin`, `createDndColumnPlugin` |
+
+---
 
 ## Quick Start
 
 ```tsx
-import { useMemo } from 'react';
-import { 
-  usePivotTable, 
-  createSortingPlugin, 
+import { useMemo } from "react";
+import {
+  usePivotTable,
+  createSortingPlugin,
   withSorting,
   createFilteringPlugin,
   withFiltering,
-  type ColumnDef 
-} from 'react-pivot-pro';
+  type ColumnDef,
+} from "react-pivot-pro";
 
 type Sale = {
   id: string;
   region: string;
   product: string;
   amount: number;
-  quantity: number;
 };
 
-export function useSalesTable(data: Sale[]) {
-  const columns = useMemo<ColumnDef<Sale>[]>(() => [
-    { id: 'region', accessorKey: 'region', enableSorting: true, enableFiltering: true },
-    { id: 'product', accessorKey: 'product', enableSorting: true, enableFiltering: true },
-    { id: 'amount', accessorKey: 'amount', enableSorting: true },
-    { id: 'quantity', accessorKey: 'quantity', enableSorting: true },
-  ], []);
+function SalesTable({ data }: { data: Sale[] }) {
+  const columns = useMemo<ColumnDef<Sale>[]>(
+    () => [
+      { id: "region", accessorKey: "region", enableFiltering: true },
+      { id: "product", accessorKey: "product", enableSorting: true },
+      { id: "amount", accessorKey: "amount", enableSorting: true },
+    ],
+    [],
+  );
 
-  const table = usePivotTable<Sale>({
+  const base = usePivotTable<Sale>({
     data,
     columns,
     plugins: [createFilteringPlugin(), createSortingPlugin()],
     initialState: {
-      sorting: [{ id: 'amount', desc: true }],
+      sorting: [{ id: "amount", desc: true }],
     },
   });
 
-  const withFeatures = withFiltering(withSorting(table));
-  return withFeatures;
+  const table = withFiltering(withSorting(base));
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          {table.columns.map((col) => (
+            <th key={col.id}>{col.header ?? col.id}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {table.getRowModel().rows.map((row) => (
+          <tr key={row.id}>
+            {table.columns.map((col) => (
+              <td key={col.id}>{String(row.getValue(col.id) ?? "")}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }
 ```
 
+---
+
 ## Core Concepts
 
-### Headless by design
-Core only manages data/state/transform pipelines. You own rendering, layout, styling, and interactions.
+### Headless by Design
 
-### Plugins
-Each plugin:
-- owns its feature state slice
-- can transform rows
-- can react to state changes
-- can expose feature APIs via `withX(table)`
+The library manages **state → transform → row model**. You own rendering, layout, styling, and user interaction. This means:
 
-Register plugins in `usePivotTable({ plugins: [...] })`, then augment instance APIs with `withX(...)`.
+- No built-in table component
+- No CSS shipped
+- No opinion about HTML structure
+- Full TypeScript types for every public API
+
+### Plugin System
+
+Each feature is a self-contained plugin that:
+
+1. **Owns its state slice** — via `getInitialState()`
+2. **Transforms rows** — via `transformRows(rows, context)`
+3. **Transforms columns** — via `transformColumns(columns, context)`
+4. **Reacts to state changes** — via `onStateChange(state, previousState, context)`
+
+Plugins run in registration order. Each plugin's output is cached by input reference + state to avoid unnecessary recomputation.
+
+**Pattern:** `createXPlugin()` → pass to `usePivotTable({ plugins: [...] })` → `withX(table)` to augment the instance with feature-specific APIs.
+
+### State Management
+
+- **Internal store** — Zustand vanilla store created inside `usePivotTable`
+- **Uncontrolled** — seed with `initialState`, manage via `table.setState()`
+- **Controlled** — pass `state` prop for external ownership, changes reported via `onStateChange`
+- **Updater pattern** — `setState(updater)` accepts either a value or `(prev) => next`
+
+### Row Model
+
+- `getCoreRowModel()` — raw rows before any plugin transforms
+- `getRowModel()` — final rows after all plugin `transformRows()` pipelines
+- Each `Row<TData>` has `id`, `index`, `original`, `values`, `getValue(columnId)`, and optional `meta`
+
+---
 
 ## API Overview
 
-### Core
-- `usePivotTable(options)`
-- `table.state`, `table.setState(updater)`
-- `table.getCoreRowModel()`, `table.getRowModel()`
-- `table.registerPlugin(...)`, `table.unregisterPlugin(...)`
+### Core Hook
 
-### Key plugin factories
-- Sorting: `createSortingPlugin`, `withSorting`
-- Filtering: `createFilteringPlugin`, `withFiltering`
-- Grouping: `createGroupingPlugin`, `withGrouping`
-- Pivot: `createPivotPlugin`, `withPivot`
-- Column features: `createColumnVisibilityPlugin`, `createColumnOrderingPlugin`, `createColumnPinningPlugin`
-- DnD: `createDndColumnPlugin`, `createDndRowPlugin`
+```ts
+const table = usePivotTable<TData>({ data, columns, plugins?, initialState?, state?, onStateChange? });
+```
 
-### Virtualization hooks
-- `useVirtualRows(options)`
-- `useVirtualColumns(options)`
+Returns `PivotTableInstance<TData>` with: `state`, `columns`, `rowModel`, `getState()`, `setState()`, `getCoreRowModel()`, `getRowModel()`, `registerPlugin()`, `unregisterPlugin()`, `getPlugin()`, `getAllPlugins()`.
+
+### Plugin Factories
+
+| Plugin            | Factory                             | Wrapper                       | Hook                         |
+| ----------------- | ----------------------------------- | ----------------------------- | ---------------------------- |
+| Sorting           | `createSortingPlugin(options?)`     | `withSorting(table)`          | `useSorting(table)`          |
+| Filtering         | `createFilteringPlugin(options?)`   | `withFiltering(table)`        | `useFiltering(table)`        |
+| Grouping          | `createGroupingPlugin()`            | `withGrouping(table)`         | `useGrouping(table)`         |
+| Pivot             | `createPivotPlugin(options?)`       | `withPivot(table)`            | `usePivot(table)`            |
+| Aggregation       | `createAggregationPlugin(options?)` | `withAggregation(table)`      | `usePivotAggregation(table)` |
+| Column Visibility | `createColumnVisibilityPlugin()`    | `withColumnVisibility(table)` | —                            |
+| Column Ordering   | `createColumnOrderingPlugin()`      | `withColumnOrdering(table)`   | —                            |
+| Column Pinning    | `createColumnPinningPlugin()`       | `withColumnPinning(table)`    | —                            |
+| DnD Row           | `createDndRowPlugin()`              | `withDndRow(table)`           | `useDndRow(table)`           |
+| DnD Column        | `createDndColumnPlugin()`           | `withDndColumn(table)`        | `useDndColumn(table)`        |
+
+### Subpath Exports
+
+```ts
+// Individual plugin subpaths
+import {
+  createSortingPlugin,
+  withSorting,
+} from "react-pivot-pro/plugins/sorting";
+import {
+  createFilteringPlugin,
+  withFiltering,
+} from "react-pivot-pro/plugins/filtering";
+import {
+  createGroupingPlugin,
+  withGrouping,
+} from "react-pivot-pro/plugins/grouping";
+import { createPivotPlugin, withPivot } from "react-pivot-pro/plugins/pivot";
+// Aggregation: available from root import only
+
+// Hooks and store
+import { useVirtualRows, useVirtualColumns } from "react-pivot-pro/hooks";
+import {
+  createPivotTableStore,
+  createPluginRegistry,
+  DEFAULT_MANIFESTS,
+} from "react-pivot-pro/store";
+import { exportCSV, copyToClipboard } from "react-pivot-pro/utils";
+```
+
+### Virtualization
+
+```ts
+const { virtualizer, virtualRows, totalSize } = useVirtualRows({
+  count,
+  getScrollElement,
+  estimateSize,
+  scrollMode: "element" | "window",
+  overscan,
+});
+```
 
 ### Utilities
-- `exportCSV(options)` / `serializeCSV(options)`
-- `copyToClipboard({ text })`
-- `fullscreen.request()`, `fullscreen.exit()`, `fullscreen.toggle()`
 
-## Performance Notes
+```ts
+// CSV export
+const { csv, fileName, blob, download } = exportCSV({
+  rows,
+  columns,
+  fileName,
+  delimiter,
+  includeHeader,
+});
 
-- Prefer stable references for `data`, `columns`, and plugin arrays (`useMemo`).
-- Compose only the plugins you need.
-- Virtualize both rows and columns for large datasets.
-- Keep custom aggregation functions pure and allocation-light.
-- For very large pivot workloads, use the server adapter path in the pivot plugin.
+// Clipboard
+const ok = await copyToClipboard({ text });
+```
+
+---
+
+## Plugin Conflicts
+
+Some plugins share state keys and cannot be active simultaneously:
+
+| Conflicting Pair               | Shared Key                      |
+| ------------------------------ | ------------------------------- |
+| `pivot` ↔ `grouping`           | `rowGrouping`, `columnGrouping` |
+| `columnOrdering` ↔ `dndColumn` | `columnOrder`                   |
+
+Use `createPluginRegistry()` from the store subpath to detect conflicts at runtime.
+
+---
+
+## Performance
+
+- Keep `data`, `columns`, and `plugins` references stable (`useMemo`)
+- Compose only the plugins you need
+- Virtualize both rows and columns for large datasets
+- Use the server-side pivot adapter for high-cardinality pivots
+- Debounce text input before updating filter state
+
+---
 
 ## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Build the library
-npm run build
-
-# Watch mode
-npm run dev
-
-# Run tests
-npm run test
-
-# Type check
-npm run typecheck
-
-# Lint
-npm run lint
-
-# Run documentation site
-npm run docs:dev
+npm install           # Install dependencies
+npm run build         # Build library (ESM + CJS + types)
+npm run dev           # Watch mode
+npm run test          # Run tests
+npm run test:run      # Run tests once (CI)
+npm run typecheck     # TypeScript type check
+npm run lint          # Lint
+npm run docs:dev      # Run documentation site
 ```
+
+---
+
+## Constraints
+
+- **No built-in UI components** — this is headless by design; you render everything
+- **React 18+** — relies on modern hooks and concurrent features
+- **Plugin conflicts** — `pivot` and `grouping` cannot be used together; `columnOrdering` and `dndColumn` cannot be used together (they share state keys)
+- **Aggregation subtotal rows** — the aggregation plugin expects rows with a `_groupKey` value in `row.values` to compute subtotals; without this grouping key, only grand totals are produced
+- **Pivot mode** — the pivot plugin replaces all rows with pivot matrix rows when enabled; original data is accessible via `getCoreRowModel()`
+- **CSV export** — runs in browser only for `download()`; `serializeCSV()` works server-side
+
+---
 
 ## Documentation
 
-- [Full Documentation](https://react-pivot-pro.vercel.app)
-- [API Reference](https://react-pivot-pro.vercel.app/docs)
-- [Examples](https://react-pivot-pro.vercel.app/examples)
-
-## Contributing
-
-1. Fork and create a feature branch.
-2. Keep changes modular and headless-first.
-3. Add/adjust types first, then implementation.
-4. Include tests for plugin behavior and row-model transforms.
-5. Open a PR with:
-   - problem statement
-   - API impact
-   - performance notes
-   - migration notes (if breaking)
-
-Guidelines:
-- No UI coupling in core/plugins/hooks.
-- Avoid `any`; preserve strict typing.
-- Optimize for stable references and minimal recomputation.
-
-## License
-
-MIT
+- [Feature Guide](docs/features/README.md) — detailed documentation for each plugin
+- [API Reference](docs/API-usePivotTable.md) — `usePivotTable` API reference
+- [Examples](docs/examples/) — runnable example components
