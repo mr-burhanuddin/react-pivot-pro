@@ -76,6 +76,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
+    "postbuild": "node -e \"const fs=require('fs');const path=require('path');const walk=(dir)=>{fs.readdirSync(dir).forEach(f=>{const p=path.join(dir,f);const st=fs.statSync(p);if(st.isDirectory())walk(p);else if(p.endsWith('.d.cts')){fs.unlinkSync(p);console.log('Removed:',p);}})};walk('dist')\"",
     "dev": "tsup --watch",
     "build:types": "tsup --dts-only",
     "lint": "eslint .",

@@ -36,6 +36,7 @@ coverage/
 # dist/ is INCLUDED via "files" in package.json
 *.map
 *.tsbuildinfo
+*.d.cts
 
 # IDE
 .vscode/

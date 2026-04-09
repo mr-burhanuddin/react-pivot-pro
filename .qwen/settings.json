@@ -30,7 +30,9 @@
       "Bash(}})",
       "Bash(.writefilesync)",
       "Bash(console.log)",
-      "Bash(dir *)"
+      "Bash(dir *)",
+      "Bash(npm pack *)",
+      "Bash(git checkout *)"
     ]
   },
   "$version": 3
