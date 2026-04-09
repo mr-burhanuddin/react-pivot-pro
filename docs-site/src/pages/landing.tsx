@@ -122,7 +122,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
       <section className="hero">
         <div className="hero-inner">
           <div>
-            <div className="hero-badge">v0.1 — Now with Aggregation Plugin</div>
+            <div className="hero-badge">v1.x — Now with Aggregation Plugin</div>
             <h1 className="hero-title">
               Headless pivot tables
               <br />
