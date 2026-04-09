@@ -41,7 +41,6 @@ export const NAV_ITEMS: NavGroup[] = [
     title: "Guides",
     items: [
       { label: "Performance", path: "/guides/performance" },
-      { label: "Internationalization", path: "/guides/i18n" },
       { label: "Migration", path: "/guides/migration" },
       { label: "Recipes", path: "/guides/recipes" },
     ],

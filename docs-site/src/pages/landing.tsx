@@ -35,12 +35,6 @@ const FEATURES = [
     description:
       "Reorder rows and columns with @dnd-kit/core integration. Full state persistence.",
   },
-  {
-    icon: "文",
-    title: "i18n Support",
-    description:
-      "Built-in internationalization with i18next. RTL support and locale-aware formatting.",
-  },
 ];
 
 const PLUGIN_TABS = [

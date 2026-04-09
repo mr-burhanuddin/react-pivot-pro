@@ -98,9 +98,9 @@ interface ColumnDef<TData, TValue> { ... }
 
 ```typescript
 // From index.ts - public API
-export { usePivotTable } from './core/usePivotTable';
-export * from './types';
-export { createSortingPlugin, withSorting } from './plugins/sorting';
+export { usePivotTable } from "./core/usePivotTable";
+export * from "./types";
+export { createSortingPlugin, withSorting } from "./plugins/sorting";
 ```
 
 ### Plugin Architecture
@@ -112,6 +112,7 @@ Follow the standard plugin pattern:
 3. **Wrapper**: `withX()` - Augments table instance with API
 
 Plugins can implement:
+
 - `getInitialState()` - Initialize plugin state
 - `transformRows()` - Transform row data
 - `transformColumns()` - Transform column definitions
@@ -120,10 +121,15 @@ Plugins can implement:
 ```typescript
 // Example structure
 export function createSortingPlugin<TData extends RowData>(options?: Options) {
-  return { /* plugin implementation */ };
+  return {
+    /* plugin implementation */
+  };
 }
 
-export function withSorting<TData extends RowData>(table: TableInstance<TData>, options?: Options) {
+export function withSorting<TData extends RowData>(
+  table: TableInstance<TData>,
+  options?: Options,
+) {
   // Augment table with sorting API
 }
 
@@ -189,7 +195,6 @@ src/
 - **@dnd-kit/core**: DnD functionality
 - **@tanstack/virtual-core**: Virtualization
 - **zustand**: State management
-- **i18next**: Internationalization
 
 ## Documentation
 

@@ -32,7 +32,8 @@
       "Bash(console.log)",
       "Bash(dir *)",
       "Bash(npm pack *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(npm install)"
     ]
   },
   "$version": 3
