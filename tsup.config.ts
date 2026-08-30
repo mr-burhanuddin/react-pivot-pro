@@ -14,6 +14,8 @@ export default defineConfig({
     'plugins/dndColumn': 'src/plugins/dndColumn.ts',
     'hooks/index': 'src/hooks/index.ts',
     'store/index': 'src/store/index.ts',
+    'compute/index': 'src/compute/index.ts',
+    'compute/worker': 'src/compute/worker/compute.worker.ts',
   },
   format: ['esm', 'cjs'],
   splitting: false,

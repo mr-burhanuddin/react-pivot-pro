@@ -1,11 +1,14 @@
-import { R as RowData, T as TableState, c as PivotTableOptions, P as PivotTableInstance, a as PivotTablePlugin } from './column-Cw_j7cBM.js';
-export { d as Column, e as ColumnDef, C as ColumnFilter, f as PivotTablePluginContext, b as Row, g as RowMeta, h as RowModel, S as SortingRule, U as Updater, i as createDefaultTableState } from './column-Cw_j7cBM.js';
+import { a as PivotTableOptions, P as PivotTableInstance } from './table-DpHE5xCK.js';
+import { T as TableState, P as PivotTablePlugin } from './column-B6J1oaDs.js';
+export { a as Column, c as ColumnDef, C as ColumnFilter, d as PivotTablePluginContext, R as Row, e as RowMeta, b as RowModel, S as SortingRule, U as Updater, f as createDefaultTableState } from './column-B6J1oaDs.js';
+import { R as RowData } from './rowData-BfpK7vQO.js';
 export { DEFAULT_MANIFESTS, PivotTableStore, PluginManifest, PluginRegistry, createPivotTableStore, createPluginRegistry } from './store/index.js';
-export { A as AggregationInput, L as LegacyAggregationFn, P as PivotApi, a as PivotTableState, b as PivotTableWithPivot, c as createPivotPlugin, l as legacyAggregationFns, r as resolveAggregationFn, u as usePivot, w as withPivot } from './pivot-vEarqXPf.js';
+export { A as AggregationInput, C as ComputeConfig, d as ComputeEngine, e as ComputeMode, f as ComputeRequest, g as ComputeResult, L as LegacyAggregationFn, l as legacyAggregationFns, r as resolveAggregationFn } from './types-BOy1UmGh.js';
 export { useVirtualColumns, useVirtualRows } from './hooks/index.js';
 export { PivotTableWithSorting, SortingApi, SortingTableState, createSortingPlugin, useSorting, withSorting } from './plugins/sorting.js';
 export { FilteringApi, FilteringTableState, PivotTableWithFiltering, createFilteringPlugin, useFiltering, withFiltering } from './plugins/filtering.js';
 export { GroupingApi, GroupingTableState, PivotTableWithGrouping, createGroupingPlugin, useGrouping, withGrouping } from './plugins/grouping.js';
+export { PivotApi, PivotTableState, PivotTableWithPivot, createPivotPlugin, usePivot, withPivot } from './plugins/pivot.js';
 export { ColumnVisibilityApi, ColumnVisibilityTableState, PivotTableWithColumnVisibility, createColumnVisibilityPlugin, withColumnVisibility } from './plugins/columnVisibility.js';
 export { ColumnOrderingApi, ColumnOrderingTableState, PivotTableWithColumnOrdering, createColumnOrderingPlugin, withColumnOrdering } from './plugins/columnOrdering.js';
 export { ColumnPinningApi, ColumnPinningTableState, PinSide, PivotTableWithColumnPinning, createColumnPinningPlugin, withColumnPinning } from './plugins/columnPinning.js';

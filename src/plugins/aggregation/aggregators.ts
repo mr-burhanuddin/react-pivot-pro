@@ -101,7 +101,9 @@ export const pctOfTotal: AggregationFn = (values: unknown[]): number | null => {
       hasValue = true;
     }
   }
-  return hasValue ? total : null;
+  if (!hasValue) return null;
+  if (total === 0) return null;
+  return total;
 };
 
 /**

@@ -17,6 +17,10 @@ import type {
 import { createDefaultTableState } from '../types';
 import { isSafeKey, getValueByAccessorKey } from '../utils/accessorHelpers';
 
+
+
+
+
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const MAX_COLUMN_ID_LENGTH = 128;
@@ -173,17 +177,16 @@ export function usePivotTable<
   TState extends TableState = TableState,
 >(options: PivotTableOptions<TData, TState>): PivotTableInstance<TData, TState> {
   const [pluginVersion, setPluginVersion] = useState(0);
-  const [dataVersion, setDataVersion] = useState(0);
   const [stateVersion, setStateVersion] = useState(0);
-  
+
+  // ponytail: ref-only tracking avoids render-phase setState (React anti-pattern); coreRowModel depends directly on data ref
   const prevDataRef = useRef<TData[] | undefined>(undefined);
   const stableDataRef = useRef<TData[]>(options.data ?? []);
   const columnsRef = useRef<Column<TData>[]>([]);
-  
+
   if (options.data !== prevDataRef.current) {
     prevDataRef.current = options.data;
     stableDataRef.current = options.data ?? [];
-    setDataVersion(v => v + 1);
   }
   
   const columns = useMemo(
@@ -345,7 +348,8 @@ export function usePivotTable<
 
   const coreRowModel = useMemo(
     () => buildCoreRowModel(stableDataRef.current, columns, options.getRowId),
-    [stableDataRef.current, columns, options.getRowId, dataVersion],
+    // ponytail: stableDataRef is mutated synchronously in render; depend on data ref directly to avoid extra version state
+    [options.data, columns, options.getRowId],
   );
 
   const rowModel = useDeepCompareMemo((): RowModel<TData> => {
@@ -391,7 +395,7 @@ export function usePivotTable<
       flatRows: transformedRows,
       rowsById,
     };
-  }, [coreRowModel.rows, pluginVersion, dataVersion, stateVersion]);
+  }, [coreRowModel.rows, pluginVersion, stateVersion]);
 
   const columnModel = useDeepCompareMemo((): Column<TData>[] => {
     const context = pluginContextRef.current;

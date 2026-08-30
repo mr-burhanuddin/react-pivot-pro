@@ -76,3 +76,5 @@ export type {
   PivotTableWithAggregation,
 } from './types/aggregation';
 export * from './store';
+// Compute is tree-shaken via separate entry `react-pivot-pro/compute` — export types only from root to avoid bundling WebGPU/Worker runtime for users not opting in
+export type { ComputeConfig, ComputeMode, ComputeRequest, ComputeResult, ComputeEngine } from './compute';

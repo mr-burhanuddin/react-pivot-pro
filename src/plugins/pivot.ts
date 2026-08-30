@@ -15,6 +15,7 @@ import {
   type PivotValueDef,
 } from "../core/pivotEngine";
 import type { LegacyAggregationFn as AggregationFn } from "../utils/aggregationFns";
+import type { ComputeConfig } from "../compute/types";
 
 export interface PivotTableState extends TableState {
   rowGrouping: string[];
@@ -51,6 +52,11 @@ export interface PivotPluginOptions<TData extends RowData = RowData> {
   defaultValues?: PivotValueDef<TData>[];
   serverAdapter?: PivotServerAdapter<TData>;
   clientSide?: boolean;
+  /**
+   * Optional compute offload (auto/cpu/webgpu). When provided, pivot uses ComputeEngine path (CPU baseline wired; WebGPU/Worker async via controller in future).
+   * Keeps sync API for now; async path will be exposed via usePivotTableAsync when wired.
+   */
+  compute?: ComputeConfig;
 }
 
 function areArrayEqual(left: string[], right: string[]): boolean {
