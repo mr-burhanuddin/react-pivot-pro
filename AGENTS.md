@@ -1,202 +1,236 @@
-# AGENTS.md - react-pivot-pro
+# AGENTS.md
 
-This file provides guidance for AI coding agents operating in this repository.
+# AI Operating Instructions
 
-## Project Overview
+This repository contains a dedicated AI knowledge base located in:
 
-`react-pivot-pro` is a headless, plugin-driven pivot table engine for React + TypeScript. The library manages state and data transformation while consumers own the UI rendering.
-
-## Build Commands
-
-```bash
-# Build the library (outputs to dist/)
-npm run build
-
-# Watch mode for development
-npm run dev
-
-# Build types only
-npm run build:types
-
-# TypeScript type checking (no emit)
-npm run typecheck
-
-# Lint
-npm run lint
-
-# Run all tests
-npm run test
-
-# Run tests once (CI/pre-commit)
-npm run test:run
-
-# Clean dist folder
-npm run clean
+```text
+.ai/
 ```
 
-### Running a Single Test
+Before performing any task, read the relevant documentation from `.ai`.
 
-Vitest supports filtering by file name or test name:
+Do not rely on assumptions.
 
-```bash
-# Run tests in a specific file
-npm run test -- src/core/pivotEngine.test.ts
+Repository documentation overrides generic model knowledge.
 
-# Run tests matching a pattern
-npm run test -- -t "pivot"
+---
 
-# Run tests matching a grep pattern
-npm run test -- --grep "sorting"
+# Required Reading Order
+
+Always read these files before making code changes.
+
+## Core Documents
+
+```text
+.ai/PROJECT_RULES.md
+.ai/ARCHITECTURE.md
+.ai/AI_GUIDE.md
 ```
 
-## Code Style Guidelines
+These files define:
 
-### TypeScript
+* architecture
+* coding standards
+* project constraints
+* implementation expectations
+* approved patterns
 
-- **Strict mode enabled** - All TypeScript strict checks are on
-- **Target**: ESNext, **Module**: ESNext, **ModuleResolution**: bundler
-- Use `import type` for type-only imports
-- Use `Extract<keyof TData, string>` for key extraction in generics
-- Always define generic constraints (e.g., `TData extends RowData`)
+---
 
-```typescript
-// Good
-export interface ColumnDef<TData extends RowData, TValue = unknown> {
-  id?: string;
-  accessorKey?: Extract<keyof TData, string>;
-  accessorFn?: (originalRow: TData, index: number) => TValue;
-}
+## Context Documents
 
-// Avoid
-interface ColumnDef<TData, TValue> { ... }
+Read as needed:
+
+```text
+.ai/context/project-context.md
+.ai/context/architecture-context.md
+.ai/context/patterns-context.md
+.ai/context/feature-map.md
+.ai/context/glossary.md
 ```
 
-### Naming Conventions
+These files contain compressed project knowledge optimized for AI agents.
 
-- **Interfaces**: PascalCase, descriptive (e.g., `ColumnDef`, `PivotEngineResult`)
-- **Types**: PascalCase (e.g., `AggregationFn`, `RowModel`)
-- **Functions/variables**: camelCase
-- **Files**: kebab-case (e.g., `pivotEngine.ts`, `useVirtualRows.ts`)
-- **Constants**: UPPER_SNAKE_CASE for true constants, camelCase for config objects
-- **IDs**: Use descriptive IDs, avoid generic names like "id" or "data"
+---
 
-### React & JSX
+## Persona Documents
 
-- Use `react-jsx` transform (React 19 style, no React import needed)
-- Functional components with hooks
-- Avoid class components
-- Use `React.ReactNode` for renderable content
-- Use `React.FC` only when necessary (prefer plain functions)
+Select the persona most relevant to the task.
 
-### Imports & Exports
-
-- Use ES modules (`import`/`export`)
-- Group imports: external first, then internal
-- Use barrel exports (`index.ts`) for public API
-- Export types alongside functions when they're part of the public API
-- Use path aliases if configured (`@pivot/*` in docs-site)
-
-```typescript
-// From index.ts - public API
-export { usePivotTable } from "./core/usePivotTable";
-export * from "./types";
-export { createSortingPlugin, withSorting } from "./plugins/sorting";
+```text
+.ai/personas/architect.md
+.ai/personas/frontend-engineer.md
+.ai/personas/backend-engineer.md
+.ai/personas/code-reviewer.md
+.ai/personas/ai-first-builder.md
 ```
 
-### Plugin Architecture
+The selected persona guides implementation decisions.
 
-Follow the standard plugin pattern:
+When multiple personas apply:
 
-1. **Plugin Factory**: `createXPlugin()` - Creates plugin instance
-2. **API Factory**: `createXApi()` - Creates feature API
-3. **Wrapper**: `withX()` - Augments table instance with API
+1. Architect
+2. Domain Engineer
+3. Code Reviewer
 
-Plugins can implement:
+---
 
-- `getInitialState()` - Initialize plugin state
-- `transformRows()` - Transform row data
-- `transformColumns()` - Transform column definitions
-- `onStateChange()` - React to state changes
+# Task Workflow
 
-```typescript
-// Example structure
-export function createSortingPlugin<TData extends RowData>(options?: Options) {
-  return {
-    /* plugin implementation */
-  };
-}
+For every task:
 
-export function withSorting<TData extends RowData>(
-  table: TableInstance<TData>,
-  options?: Options,
-) {
-  // Augment table with sorting API
-}
+## Phase 1 — Understand
 
-export function useSorting<TData extends RowData>(table: TableInstance<TData>) {
-  // Hook for accessing sorting API
-}
+Identify:
+
+* request
+* affected features
+* impacted modules
+
+---
+
+## Phase 2 — Load Context
+
+Read:
+
+* Core Documents
+* Relevant Context Files
+* Relevant Persona
+
+---
+
+## Phase 3 — Discover Existing Patterns
+
+Before writing code:
+
+Search for:
+
+* similar components
+* similar hooks
+* similar services
+* similar API integrations
+* similar state management patterns
+
+Prefer existing repository patterns over new patterns.
+
+---
+
+## Phase 4 — Implement
+
+Follow:
+
+1. PROJECT_RULES.md
+2. ARCHITECTURE.md
+3. Existing Repository Patterns
+
+in that order.
+
+---
+
+## Phase 5 — Validate
+
+Verify:
+
+* architecture compliance
+* type safety
+* performance impact
+* accessibility impact
+* consistency with existing patterns
+
+---
+
+# Evidence-Based Development
+
+Never assume.
+
+If something cannot be proven from:
+
+* code
+* imports
+* dependencies
+* configuration
+* documentation
+
+state:
+
+"Unable to determine from repository evidence."
+
+Do not invent:
+
+* architecture
+* workflows
+* business logic
+* naming conventions
+* design decisions
+
+---
+
+# Repository Rules
+
+Follow repository conventions even if they differ from industry defaults.
+
+Consistency is preferred over introducing new patterns.
+
+Avoid architectural drift.
+
+Avoid parallel implementations of existing solutions.
+
+---
+
+# Security Rules
+
+Never expose or document:
+
+```text
+.env
+.env.*
+secrets.*
+credentials.*
+*.pem
+*.key
 ```
 
-### Error Handling
+Never output:
 
-- Use `try/catch` for async operations
-- Return meaningful error messages
-- Consider `Result<T, E>` patterns for fallible operations
-- Log errors appropriately (avoid console.log in production)
+* tokens
+* secrets
+* passwords
+* certificates
+* private credentials
 
-### State Management
+Sensitive files may be acknowledged but never used as implementation context.
 
-- Use Zustand for internal state (see `src/store/pivotTableStore.ts`)
-- Support controlled and uncontrolled state patterns
-- Use `Updater<T>` type for functional state updates
+---
 
-```typescript
-type Updater<T> = T | ((prev: T) => T);
+# Documentation Location
+
+All AI documentation lives under:
+
+```text
+.ai/
 ```
 
-### Testing
+If documentation conflicts with implementation:
 
-- Tests use Vitest
-- Place tests alongside source files or in `__tests__` directory
-- Test plugin behavior, not implementation details
-- Mock external dependencies
+1. Verify actual code.
+2. Treat code as source of truth.
+3. Update documentation if necessary.
 
-### File Organization
+---
 
-```
-src/
-├── core/           # Core engine (pivotEngine, usePivotTable)
-├── hooks/          # React hooks (useVirtualRows, useVirtualColumns)
-├── plugins/        # Feature plugins (sorting, filtering, grouping, etc.)
-├── store/          # Zustand store
-├── types/          # TypeScript types
-├── utils/          # Utility functions
-└── index.ts        # Public exports
-```
+# Definition Of Done
 
-### Common Patterns
+A task is complete only if:
 
-- **Caching**: Cache plugin output keyed by input rows and state
-- **Virtualization**: Use `@tanstack/virtual-core` for row/column virtualization
-- **Drag & Drop**: Use `@dnd-kit/core` for DnD features
-- **Controlled/Uncontrolled**: State can be controlled via `options.state` or managed internally
+✓ Existing patterns were reviewed
 
-### Before Committing
+✓ Architecture rules were followed
 
-1. Run `npm run typecheck` - ensure no TS errors
-2. Run `npm run lint` - ensure no lint errors
-3. Run `npm run test:run` - ensure all tests pass
-4. Review changes for unintended modifications
+✓ No duplicate abstractions were introduced
 
-## Dependencies
+✓ Type safety was maintained
 
-- **React**: >=18.0.0 (peer dependency)
-- **@dnd-kit/core**: DnD functionality
-- **@tanstack/virtual-core**: Virtualization
-- **zustand**: State management
+✓ Changes align with repository conventions
 
-## Documentation
-
-- Run `npm run docs:dev` for local docs development
-- Docs site uses Vite in `docs-site/` directory
+✓ Documentation remains accurate

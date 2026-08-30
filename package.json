@@ -54,6 +54,31 @@
       "import": "./dist/plugins/pivot.js",
       "require": "./dist/plugins/pivot.cjs"
     },
+    "./plugins/columnVisibility": {
+      "types": "./dist/plugins/columnVisibility.d.ts",
+      "import": "./dist/plugins/columnVisibility.js",
+      "require": "./dist/plugins/columnVisibility.cjs"
+    },
+    "./plugins/columnOrdering": {
+      "types": "./dist/plugins/columnOrdering.d.ts",
+      "import": "./dist/plugins/columnOrdering.js",
+      "require": "./dist/plugins/columnOrdering.cjs"
+    },
+    "./plugins/columnPinning": {
+      "types": "./dist/plugins/columnPinning.d.ts",
+      "import": "./dist/plugins/columnPinning.js",
+      "require": "./dist/plugins/columnPinning.cjs"
+    },
+    "./plugins/dndRow": {
+      "types": "./dist/plugins/dndRow.d.ts",
+      "import": "./dist/plugins/dndRow.js",
+      "require": "./dist/plugins/dndRow.cjs"
+    },
+    "./plugins/dndColumn": {
+      "types": "./dist/plugins/dndColumn.d.ts",
+      "import": "./dist/plugins/dndColumn.js",
+      "require": "./dist/plugins/dndColumn.cjs"
+    },
     "./hooks": {
       "types": "./dist/hooks/index.d.ts",
       "import": "./dist/hooks/index.js",
