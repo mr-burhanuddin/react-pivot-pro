@@ -282,7 +282,7 @@ interface GroupingApi<TData, TState> {
 
 ### Example
 
-See [`docs/examples/row-grouping.tsx`](../examples/row-grouping.tsx).
+See [`.ai/docs/examples/row-grouping.tsx`](../examples/row-grouping.tsx).
 
 ---
 
@@ -351,7 +351,7 @@ interface PivotEngineResult<TData> {
 
 ### Example
 
-See [`docs/examples/pivot-aggregation.tsx`](../examples/pivot-aggregation.tsx) and [`docs/examples/server-side-pivot.tsx`](../examples/server-side-pivot.tsx).
+See [`.ai/docs/examples/pivot-aggregation.tsx`](../examples/pivot-aggregation.tsx) and [`.ai/docs/examples/server-side-pivot.tsx`](../examples/server-side-pivot.tsx).
 
 ---
 
@@ -638,7 +638,7 @@ interface DndRowApi<TData, TState> {
 
 ### Example
 
-See [`docs/examples/dnd-reorder.tsx`](../examples/dnd-reorder.tsx).
+See [`.ai/docs/examples/dnd-reorder.tsx`](../examples/dnd-reorder.tsx).
 
 ---
 
@@ -672,7 +672,7 @@ interface DndColumnApi<TData, TState> {
 
 ### Example
 
-See [`docs/examples/dnd-reorder.tsx`](../examples/dnd-reorder.tsx).
+See [`.ai/docs/examples/dnd-reorder.tsx`](../examples/dnd-reorder.tsx).
 
 ---
 
@@ -725,7 +725,7 @@ interface UseVirtualRowsResult {
 
 ### Example
 
-See [`docs/examples/virtualization-and-utilities.tsx`](../examples/virtualization-and-utilities.tsx).
+See [`.ai/docs/examples/virtualization-and-utilities.tsx`](../examples/virtualization-and-utilities.tsx).
 
 ---
 
