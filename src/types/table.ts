@@ -1,9 +1,11 @@
 import type { Column, ColumnDef } from './column';
 import type { PivotTablePlugin } from './plugin';
 import type { RowModel } from './row';
+import type { RowData } from './rowData';
 import type { TableState, Updater } from './state';
+import type { ComputeConfig } from '../compute/types';
 
-export type RowData = Record<string, unknown>;
+export type { RowData } from './rowData';
 
 export interface PivotTableOptions<
   TData extends RowData,
@@ -17,6 +19,13 @@ export interface PivotTableOptions<
   plugins?: PivotTablePlugin<TData, TState>[];
   getRowId?: (originalRow: TData, index: number) => string;
   defaultColumn?: Partial<ColumnDef<TData>>;
+  /**
+   * Optional compute configuration for pivot/aggregation offload.
+   * When omitted, behaves as today (synchronous CPU). When provided with mode 'auto' | 'cpu' | 'webgpu',
+   * pivot engine may use ComputeController (CPU baseline, WebGPU optional, Worker optional).
+   * SSR-safe: undefined → CPU.
+   */
+  compute?: ComputeConfig;
 }
 
 export interface PivotTableInstance<

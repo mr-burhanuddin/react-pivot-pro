@@ -32,6 +32,7 @@ const PAGE_MODULES: Record<string, PageComponent> = {
     () => import("./pages/plugin-virtualization"),
   ),
   "/guides/performance": lazy(() => import("./pages/guide-performance")),
+  "/guides/compute": lazy(() => import("./pages/guide-compute")),
   "/guides/migration": lazy(() => import("./pages/guide-migration")),
   "/guides/recipes": lazy(() => import("./pages/guide-recipes")),
   "/contributing/setup": lazy(() => import("./pages/contributing-setup")),
